@@ -1,0 +1,2 @@
+# BlazorInteropGenerator
+Blazor Interop Generator
