@@ -3,9 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34004.107
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorInteropGenerator", "src\BlazorInteropGenerator\BlazorInteropGenerator.csproj", "{55F19297-A606-414B-9BC8-C61CD7DC8C14}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorInteropGenerator.SourceGenerator", "src\BlazorInteropGenerator.SourceGenerator\BlazorInteropGenerator.SourceGenerator.csproj", "{55F19297-A606-414B-9BC8-C61CD7DC8C14}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorInterpGenerator.Tests", "tests\BlazorInteropGenerator.Tests\BlazorInterpGenerator.Tests.csproj", "{62AB73D2-DEE0-4237-AA62-51DBCAAA6443}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorInteropGenerator", "src\BlazorInteropGenerator\BlazorInteropGenerator.csproj", "{763F93B5-7638-4E5F-BBF6-12CAE22B291D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorInteropGenerator.Sample", "samples\BlazorInteropGenerator.Sample\BlazorInteropGenerator.Sample.csproj", "{A9791733-1DF4-4310-8C79-6827B68F230F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +25,14 @@ Global
 		{62AB73D2-DEE0-4237-AA62-51DBCAAA6443}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{62AB73D2-DEE0-4237-AA62-51DBCAAA6443}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{62AB73D2-DEE0-4237-AA62-51DBCAAA6443}.Release|Any CPU.Build.0 = Release|Any CPU
+		{763F93B5-7638-4E5F-BBF6-12CAE22B291D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{763F93B5-7638-4E5F-BBF6-12CAE22B291D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{763F93B5-7638-4E5F-BBF6-12CAE22B291D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{763F93B5-7638-4E5F-BBF6-12CAE22B291D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9791733-1DF4-4310-8C79-6827B68F230F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9791733-1DF4-4310-8C79-6827B68F230F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9791733-1DF4-4310-8C79-6827B68F230F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9791733-1DF4-4310-8C79-6827B68F230F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

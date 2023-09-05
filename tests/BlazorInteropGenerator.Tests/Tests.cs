@@ -1,26 +1,23 @@
 ﻿using BlazorInteropGenerator;
-using Microsoft;
+using BlazorInteropGenerator.SourceGenerator;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Text;
-using Microsoft.VisualStudio.TestPlatform.Common.Utilities;
-using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
 using Xunit;
 
 namespace BlazorInterpGenerator.Tests;
 
-public class Tests
+public class Tests : TestsBase
 {
     [Fact]
     public void SimpleGeneratorTest()
     {
         string userSource = """
+using BlazorInteropGenerator;
+
 namespace MyCode
 {
+    [BlazorInteropGeneratorAttribute("test")]
     public class Program
     {
         public static void Main(string[] args)
@@ -31,17 +28,10 @@ namespace MyCode
 """;
         var compilation = CreateCompilation(userSource);
 
-        var driver = CSharpGeneratorDriver.Create(new IIncrementalGenerator[] { new Generator() });
+        var driver = CSharpGeneratorDriver.Create(new IIncrementalGenerator[] { new SourceGenerator() });
         driver.RunGeneratorsAndUpdateCompilation(compilation, out var updatedCompilation, out var diagnostics);
 
         Assert.Empty(diagnostics);
         Assert.Empty(updatedCompilation.GetDiagnostics());
     }
-
-    private static Compilation CreateCompilation(string source) => CSharpCompilation.Create(
-        assemblyName: "compilation",
-        syntaxTrees: new[] { CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Preview)) },
-        references: new[] { MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location) },
-        options: new CSharpCompilationOptions(OutputKind.ConsoleApplication)
-    );
 }

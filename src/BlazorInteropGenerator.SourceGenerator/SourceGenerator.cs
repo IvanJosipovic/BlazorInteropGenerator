@@ -1,17 +1,23 @@
 ﻿using Microsoft.CodeAnalysis;
+using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 
-namespace BlazorInteropGenerator
+namespace BlazorInteropGenerator.SourceGenerator
 {
     [Generator(LanguageNames.CSharp)]
-    public class Generator : IIncrementalGenerator
+    public class SourceGenerator : IIncrementalGenerator
     {
         public void Initialize(IncrementalGeneratorInitializationContext initContext)
         {
-            // define the execution pipeline here via a series of transformations:
-
+#if DEBUG
+            if (!Debugger.IsAttached)
+            {
+                Debugger.Launch();
+            }
+#endif
             // find all additional files that end with .txt
-            IncrementalValuesProvider<AdditionalText> textFiles = initContext.AdditionalTextsProvider.Where(static file => file.Path.EndsWith(".txt"));
+            IncrementalValuesProvider<AdditionalText> textFiles = initContext.AdditionalTextsProvider.Where(static file => file.Path.EndsWith(".d.ts"));
 
             // read their contents and save their name
             IncrementalValuesProvider<(string name, string content)> namesAndContents = textFiles.Select((text, cancellationToken) => (name: Path.GetFileNameWithoutExtension(text.Path), content: text.GetText(cancellationToken)!.ToString()));
@@ -19,11 +25,7 @@ namespace BlazorInteropGenerator
             // generate a class that contains their values as const strings
             initContext.RegisterSourceOutput(namesAndContents, (spc, nameAndContent) =>
             {
-                spc.AddSource($"ConstStrings.{nameAndContent.name}", $@"
-                    public static partial class ConstStrings
-                    {{
-                        public const string {nameAndContent.name} = ""{nameAndContent.content}"";
-                    }}");
+                spc.AddSource($"ConstStrings.{nameAndContent.name}.cs", $@"//test");
             });
         }
     }
