@@ -16,12 +16,17 @@
   <!--Source Generator Dependencies-->
   <ItemGroup>
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="$(OutputPath)\BlazorInteropGenerator.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
-    <PackageReference Include="TSDParser" Version="1.0.0-alpha.6" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="TSDParser" Version="1.0.0-alpha.7" GeneratePathProperty="true" PrivateAssets="all" />
     <None Include="$(PKGTSDParser)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
     <PackageReference Include="Sprache" Version="2.3.1" GeneratePathProperty="true" PrivateAssets="all" />
     <None Include="$(PKGSprache)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BlazorInteropGenerator\BlazorInteropGenerator.csproj" />
   </ItemGroup>
 
   <Target Name="GetDependencyTargetPaths">

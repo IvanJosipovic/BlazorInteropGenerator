@@ -28,6 +28,7 @@
 
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\BlazorInteropGenerator.SourceGenerator\BlazorInteropGenerator.SourceGenerator.csproj" />
     <ProjectReference Include="..\..\src\BlazorInteropGenerator\BlazorInteropGenerator.csproj" />
   </ItemGroup>
 

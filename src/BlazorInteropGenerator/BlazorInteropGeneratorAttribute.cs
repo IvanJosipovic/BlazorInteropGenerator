@@ -13,7 +13,7 @@ namespace BlazorInteropGenerator
         /// Generates C# Interfaces from TypeScript Definitions
         /// </summary>
         /// <param name="name">NPM Package or path to TS Definition</param>
-        public BlazorInteropGeneratorAttribute(string name, string objectName)
+        public BlazorInteropGeneratorAttribute(string name, string objectName = null)
         {
             Name = name;
             ObjectName = objectName;
