@@ -8,15 +8,6 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-    <CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="$(CompilerGeneratedFilesOutputPath)/*/**/*.cs" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\src\BlazorInteropGenerator.SourceGenerator\BlazorInteropGenerator.SourceGenerator.csproj" SetTargetFramework="TargetFramework=netstandard2.0" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     <ProjectReference Include="..\..\src\BlazorInteropGenerator\BlazorInteropGenerator.csproj" />
@@ -26,7 +17,4 @@
     <AdditionalFiles Include="*.d.ts" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Include="Generated\BlazorInteropGenerator.SourceGenerator\BlazorInteropGenerator.SourceGenerator.SourceGenerator\ConstStrings.tsd1.d.cs" />
-  </ItemGroup>
 </Project>

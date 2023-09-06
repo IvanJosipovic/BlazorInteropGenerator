@@ -2,8 +2,8 @@
 
 namespace BlazorInteropGenerator.Sample;
 
-[BlazorInteropGenerator("tsd1.d.ts")]
-public class TSD1
+[BlazorInteropGenerator("TSD1.d.ts", "SomeType")]
+public partial interface ISomeType
 {
 
 }
