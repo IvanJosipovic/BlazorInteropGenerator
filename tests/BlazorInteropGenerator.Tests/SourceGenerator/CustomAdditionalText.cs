@@ -3,7 +3,7 @@ using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-namespace BlazorInterpGenerator.Tests;
+namespace BlazorInterpGenerator.Tests.SourceGenerator;
 
 public class CustomAdditionalText : AdditionalText
 {

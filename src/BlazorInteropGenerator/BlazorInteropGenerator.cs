@@ -3,22 +3,20 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Linq;
-using System.Xml;
 using TSDParser.Class;
 using TSDParser.Enums;
 using TSDParser.Interfaces;
 using SyntaxKind = Microsoft.CodeAnalysis.CSharp.SyntaxKind;
 using TSSyntaxKind = TSDParser.Enums.SyntaxKind;
 
-
 namespace BlazorInteropGenerator
 {
     /// <summary>
-    ///
+    /// Generates C# Code from TypeScript Definitions
     /// </summary>
     public static class BlazorInteropGenerator
     {
-        static CompilationUnitSyntax GenerateObject(string typeScriptDefinition, string objectName, TSSyntaxKind syntaxKind)
+        public static CompilationUnitSyntax GenerateObjects(string typeScriptDefinition, string objectName, TSSyntaxKind syntaxKind)
         {
             var syntaxFactory = SyntaxFactory.CompilationUnit();
 
@@ -27,6 +25,7 @@ namespace BlazorInteropGenerator
             if (syntaxKind == TSSyntaxKind.InterfaceDeclaration)
             {
                 var interfaceDeclaration = tsd.Statements.Where(x => x.Kind == syntaxKind).Cast<InterfaceDeclaration>().First(x => x.Name.Text == objectName);
+
                 syntaxFactory = GenerateInterfaceDeclaration(syntaxFactory, interfaceDeclaration);
             }
             else if (syntaxKind == TSSyntaxKind.ClassDeclaration)
@@ -45,7 +44,8 @@ namespace BlazorInteropGenerator
         {
             var @interface = SyntaxFactory.InterfaceDeclaration(interfaceDeclaration.Name.Text);
 
-            var @public = SyntaxFactory.Token(SyntaxKind.PublicKeyword);
+            @interface = @interface.AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
+            @interface = @interface.AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword));
 
             if (interfaceDeclaration.JSDoc != null)
             {
@@ -53,14 +53,11 @@ namespace BlazorInteropGenerator
 
                 //var comment2 = SyntaxFactory.SyntaxTrivia(Microsoft.CodeAnalysis.CSharp.SyntaxKind.DocumentationCommentExteriorTrivia, interfaceDeclaration.JSDoc.Comment);
 
-                @public = @public.WithLeadingTrivia(new SyntaxTriviaList(new SyntaxTrivia[]
+                @interface = @interface.WithLeadingTrivia(new SyntaxTriviaList(new SyntaxTrivia[]
                 {
                     comment
                 }));
             }
-
-            @interface = @interface.AddModifiers(@public);
-            @interface = @interface.AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword));
 
             foreach (var statement in interfaceDeclaration.Statements)
             {
@@ -79,6 +76,13 @@ namespace BlazorInteropGenerator
                 else if (statement.Kind == TSSyntaxKind.MethodSignature)
                 {
                     var methodSignature = statement as MethodSignature;
+
+                    var methodDeclaration = SyntaxFactory.MethodDeclaration(ConvertType(methodSignature.Type), methodSignature.Name.Text)
+                        .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
+
+                    methodDeclaration = methodDeclaration.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+
+                    @interface = @interface.AddMembers(methodDeclaration);
                 }
                 else
                 {
@@ -108,7 +112,7 @@ namespace BlazorInteropGenerator
                 case TSSyntaxKind.ExportKeyword:
                     break;
                 case TSSyntaxKind.NullKeyword:
-                    break;
+                    return SyntaxFactory.ParseTypeName("null");
                 case TSSyntaxKind.VoidKeyword:
                     return SyntaxFactory.ParseTypeName("void");
                 case TSSyntaxKind.PrivateKeyword:
@@ -120,9 +124,9 @@ namespace BlazorInteropGenerator
                 case TSSyntaxKind.FirstContextualKeyword:
                     break;
                 case TSSyntaxKind.AnyKeyword:
-                    break;
+                    return SyntaxFactory.ParseTypeName("object");
                 case TSSyntaxKind.BooleanKeyword:
-                    break;
+                    return SyntaxFactory.ParseTypeName("bool");
                 case TSSyntaxKind.DeclareKeyword:
                     break;
                 case TSSyntaxKind.TypeOperator:

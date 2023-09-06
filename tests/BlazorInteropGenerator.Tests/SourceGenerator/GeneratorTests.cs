@@ -6,9 +6,9 @@ using System.Collections.Immutable;
 using System.Reflection;
 using Xunit;
 
-namespace BlazorInterpGenerator.Tests;
+namespace BlazorInterpGenerator.Tests.SourceGenerator;
 
-public class Tests : TestsBase
+public class GeneratorTests : TestsBase
 {
     [Fact]
     public void SimpleGeneratorTest()
@@ -39,7 +39,7 @@ public class Tests : TestsBase
         var compilation = CreateCompilation(userSource);
 
         var driver = CSharpGeneratorDriver
-            .Create(new IIncrementalGenerator[] { new SourceGenerator() })
+            .Create(new IIncrementalGenerator[] { new BlazorInteropGenerator.SourceGenerator.SourceGenerator() })
             .AddAdditionalTexts(ImmutableArray.CreateRange(new List<AdditionalText>() { new CustomAdditionalText("test.d.ts", tsd) })); ;
 
         driver.RunGeneratorsAndUpdateCompilation(compilation, out var updatedCompilation, out var diagnostics);

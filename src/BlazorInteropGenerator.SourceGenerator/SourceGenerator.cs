@@ -27,10 +27,10 @@ namespace BlazorInteropGenerator.SourceGenerator
             //    .Where(static m => m is not null);
 
             // find all additional files that end with .txt
-            IncrementalValuesProvider<AdditionalText> textFiles = initContext.AdditionalTextsProvider.Where(static file => file.Path.EndsWith(".d.ts"));
+            IncrementalValuesProvider<AdditionalText> tsDefinitions = initContext.AdditionalTextsProvider.Where(static file => file.Path.EndsWith(".d.ts"));
 
             // read their contents and save their name
-            IncrementalValuesProvider<(string name, string content)> namesAndContents = textFiles.Select((text, cancellationToken) => (name: Path.GetFileName(text.Path), content: text.GetText(cancellationToken)!.ToString()));
+            IncrementalValuesProvider<(string name, string content)> namesAndContents = tsDefinitions.Select((text, cancellationToken) => (name: Path.GetFileName(text.Path), content: text.GetText(cancellationToken)!.ToString()));
 
             // generate a class that contains their values as const strings
             initContext.RegisterSourceOutput(namesAndContents, (spc, nameAndContent) =>
