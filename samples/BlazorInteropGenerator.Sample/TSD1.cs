@@ -12,5 +12,5 @@ public class SomeClass : SomeType
 {
     /// <inheritdoc/>
     public string test { get; set; }
-    public string test3 { get; set; }
+    public string test2 { get; set; }
 }
