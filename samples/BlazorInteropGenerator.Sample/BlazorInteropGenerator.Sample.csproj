@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BlazorInteropGenerator.SourceGenerator" Version="1.0.0-*" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <PackageReference Include="BlazorInteropGenerator.SourceGenerator" Version="1.0.0-alpha.1" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <AdditionalFiles Include="*.d.ts" />
   </ItemGroup>
 
