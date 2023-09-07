@@ -20,13 +20,6 @@ public class GeneratorTests : TestsBase
             {
                 [BlazorInteropGeneratorAttribute("test.d.ts", "SomeType")]
                 public partial interface SomeType {}
-
-                public class Program
-                {
-                    public static void Main(string[] args)
-                    {
-                    }
-                }
             }
             """;
 

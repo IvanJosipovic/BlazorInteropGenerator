@@ -11,6 +11,6 @@ public class TestsBase
         assemblyName: "compilation",
         syntaxTrees: new[] { CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest)) },
         references: Basic.Reference.Assemblies.NetStandard20.References.All.ToArray<MetadataReference>().Append(MetadataReference.CreateFromFile(typeof(BlazorInteropGeneratorAttribute).GetTypeInfo().Assembly.Location)).ToArray(),
-        options: new CSharpCompilationOptions(OutputKind.ConsoleApplication)
+        options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
     );
 }
