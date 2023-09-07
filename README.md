@@ -2,7 +2,7 @@
 
 [![Nuget](https://img.shields.io/nuget/vpre/BlazorInteropGenerator.svg?style=flat-square)](https://www.nuget.org/packages/BlazorInteropGenerator)
 [![Nuget)](https://img.shields.io/nuget/dt/BlazorInteropGenerator.svg?style=flat-square)](https://www.nuget.org/packages/BlazorInteropGenerator)
-[![codecov](https://codecov.io/gh/IvanJosipovic/BlazorInteropGenerator/branch/alpha/graph/badge.svg?token=K5WBqEitwL)](https://codecov.io/gh/IvanJosipovic/BlazorInteropGenerator)
+[![codecov](https://codecov.io/gh/IvanJosipovic/BlazorInteropGenerator/branch/alpha/graph/badge.svg?token=HmcWySWxe5)](https://codecov.io/gh/IvanJosipovic/BlazorInteropGenerator)
 
 ## What is this?
 
