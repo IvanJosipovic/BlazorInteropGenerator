@@ -265,4 +265,16 @@ public class CodeGenerationTests
 
         prop.Identifier.Text.Should().Be("method");
     }
+
+    [Fact]
+    public void ShouldThrowError()
+    {
+        var tsd = """
+                export interface SomeType {
+                  method(): string;
+                }
+                """;
+
+        Assert.Throws<NotSupportedException>(() => Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.AnyKeyword, "Test"));
+    }
 }
