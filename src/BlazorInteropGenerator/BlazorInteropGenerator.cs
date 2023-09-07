@@ -64,7 +64,9 @@ public static class Generator
             {
                 var propertySignature = statement as PropertySignature;
 
-                var propertyDeclaration = SyntaxFactory.PropertyDeclaration(ConvertType(propertySignature.Type), propertySignature.Name.Text)
+                TypeSyntax type = propertySignature.QuestionToken == null ? ConvertType(propertySignature.Type) : SyntaxFactory.NullableType(ConvertType(propertySignature.Type));
+
+                var propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, propertySignature.Name.Text)
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                     .AddAccessorListAccessors(
                         SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
