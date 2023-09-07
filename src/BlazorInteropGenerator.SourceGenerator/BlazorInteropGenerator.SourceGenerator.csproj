@@ -7,6 +7,17 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <IsRoslynComponent>true</IsRoslynComponent>
+    <PackageId>BlazorInteropGenerator.SourceGenerator</PackageId>
+    <Authors>Ivan Josipovic</Authors>
+    <Description>Converts TypeScript Definition to C# Interfaces</Description>
+    <PackageTags></PackageTags>
+    <RepositoryUrl>https://github.com/IvanJosipovic/BlazorInteropGenerator</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
@@ -42,5 +53,10 @@
       <TargetPathWithTargetPlatformMoniker Include="$(PKGSprache)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
     </ItemGroup>
   </Target>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
 
 </Project>
