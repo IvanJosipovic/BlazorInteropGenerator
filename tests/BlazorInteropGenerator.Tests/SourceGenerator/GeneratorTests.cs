@@ -19,7 +19,7 @@ public class GeneratorTests : TestsBase
 
             namespace MyCode.MyTest
             {
-                [BlazorInteropGeneratorAttribute("test.d.ts", "SomeType")]
+                [BlazorInteropGeneratorAttribute("test.d.ts")]
                 public partial interface SomeType {}
             }
             """;

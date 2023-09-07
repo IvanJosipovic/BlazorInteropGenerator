@@ -30,13 +30,14 @@ Update the .csproj with the following settings.
 </Project>
 ```
 
-Create a Class file with this format.
+Create a Class file with this format, in this case, the TypeScript Definition must contain an interface called "InterfaceName"
+The Source Generator will generate the interface and all its dependencies.
 ```c#
 using BlazorInteropGenerator;
 
 namespace BlazorInteropGenerator.Sample;
 
-[BlazorInteropGenerator("TSD1.d.ts", "InterfaceName")]
+[BlazorInteropGenerator("TSD1.d.ts")]
 public partial interface InterfaceName
 {
 

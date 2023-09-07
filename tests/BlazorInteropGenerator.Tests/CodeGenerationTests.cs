@@ -54,18 +54,18 @@ public class CodeGenerationTests
         syntaxFactory.Members.Count.Should().Be(1);
         var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
 
-        var prop = @interface.Members[0] as PropertyDeclarationSyntax;
+        var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
 
-        prop.Modifiers.Count.Should().Be(1);
-        prop.Modifiers[0].Value.Should().Be("public");
+        prop1.Modifiers.Count.Should().Be(1);
+        prop1.Modifiers[0].Value.Should().Be("public");
 
-        prop.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
+        prop1.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
 
-        prop.Identifier.Text.Should().Be("prop1");
+        prop1.Identifier.Text.Should().Be("prop1");
 
-        prop.AccessorList.Accessors.Count.Should().Be(2);
-        prop.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
-        prop.AccessorList.Accessors[1].Kind().Should().Be(SyntaxKind.SetAccessorDeclaration);
+        prop1.AccessorList.Accessors.Count.Should().Be(2);
+        prop1.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
+        prop1.AccessorList.Accessors[1].Kind().Should().Be(SyntaxKind.SetAccessorDeclaration);
     }
 
     [Fact]
@@ -86,18 +86,128 @@ public class CodeGenerationTests
         syntaxFactory.Members.Count.Should().Be(1);
         var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
 
-        var prop = @interface.Members[0] as PropertyDeclarationSyntax;
+        var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
 
-        prop.Modifiers.Count.Should().Be(1);
-        prop.Modifiers[0].Value.Should().Be("public");
+        prop1.Modifiers.Count.Should().Be(1);
+        prop1.Modifiers[0].Value.Should().Be("public");
 
-        prop.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("double");
+        prop1.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("double");
 
-        prop.Identifier.Text.Should().Be("prop1");
+        prop1.Identifier.Text.Should().Be("prop1");
 
-        prop.AccessorList.Accessors.Count.Should().Be(2);
-        prop.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
-        prop.AccessorList.Accessors[1].Kind().Should().Be(SyntaxKind.SetAccessorDeclaration);
+        prop1.AccessorList.Accessors.Count.Should().Be(2);
+        prop1.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
+        prop1.AccessorList.Accessors[1].Kind().Should().Be(SyntaxKind.SetAccessorDeclaration);
+    }
+
+    [Fact]
+    public void InterfacePropertyArray()
+    {
+        var tsd = """
+            export interface SomeType {
+                prop1: number[];
+                prop2: Array<number>;
+            }
+            """;
+
+        var syntaxFactory = Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
+
+        prop1.Modifiers.Count.Should().Be(1);
+        prop1.Modifiers[0].Value.Should().Be("public");
+
+        (prop1.Type.As<ArrayTypeSyntax>().ElementType as PredefinedTypeSyntax).Keyword.Value.Should().Be("double");
+
+        prop1.Identifier.Text.Should().Be("prop1");
+
+        prop1.AccessorList.Accessors.Count.Should().Be(2);
+        prop1.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
+        prop1.AccessorList.Accessors[1].Kind().Should().Be(SyntaxKind.SetAccessorDeclaration);
+
+        var prop2 = @interface.Members[1] as PropertyDeclarationSyntax;
+
+        prop2.Modifiers.Count.Should().Be(1);
+        prop2.Modifiers[0].Value.Should().Be("public");
+
+        (prop2.Type.As<ArrayTypeSyntax>().ElementType as PredefinedTypeSyntax).Keyword.Value.Should().Be("double");
+
+        prop2.Identifier.Text.Should().Be("prop2");
+
+        prop2.AccessorList.Accessors.Count.Should().Be(2);
+        prop2.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
+        prop2.AccessorList.Accessors[1].Kind().Should().Be(SyntaxKind.SetAccessorDeclaration);
+    }
+
+    [Fact]
+    public void InterfacePropertyAny()
+    {
+        var tsd = """
+                export interface SomeType {
+                  prop1: any;
+                }
+                """;
+
+        var syntaxFactory = Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
+
+        prop1.Modifiers.Count.Should().Be(1);
+        prop1.Modifiers[0].Value.Should().Be("public");
+
+        prop1.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("object");
+
+        prop1.Identifier.Text.Should().Be("prop1");
+
+        prop1.AccessorList.Accessors.Count.Should().Be(2);
+        prop1.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
+        prop1.AccessorList.Accessors[1].Kind().Should().Be(SyntaxKind.SetAccessorDeclaration);
+    }
+
+    [Fact]
+    public void InterfacePropertyBoolean()
+    {
+        var tsd = """
+                export interface SomeType {
+                  prop1: boolean;
+                }
+                """;
+
+        var syntaxFactory = Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
+
+        prop1.Modifiers.Count.Should().Be(1);
+        prop1.Modifiers[0].Value.Should().Be("public");
+
+        prop1.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("bool");
+
+        prop1.Identifier.Text.Should().Be("prop1");
+
+        prop1.AccessorList.Accessors.Count.Should().Be(2);
+        prop1.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
+        prop1.AccessorList.Accessors[1].Kind().Should().Be(SyntaxKind.SetAccessorDeclaration);
     }
 
     [Fact]
@@ -154,5 +264,17 @@ public class CodeGenerationTests
         prop.ReturnType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
 
         prop.Identifier.Text.Should().Be("method");
+    }
+
+    [Fact]
+    public void ShouldThrowError()
+    {
+        var tsd = """
+                export interface SomeType {
+                  method(): string;
+                }
+                """;
+
+        Assert.Throws<NotSupportedException>(() => Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.AnyKeyword, "Test"));
     }
 }

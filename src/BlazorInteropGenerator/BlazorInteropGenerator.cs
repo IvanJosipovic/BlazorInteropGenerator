@@ -162,6 +162,12 @@ public static class Generator
             case TSSyntaxKind.IndexSignature:
                 break;
             case TSSyntaxKind.TypeReference:
+                // Handle Types
+                var typeReference = (TypeReference)node;
+                if (typeReference.TypeName.Text == "Array")
+                {
+                    return SyntaxFactory.ParseTypeName(ConvertType(typeReference.TypeArguments[0]) + "[]");
+                }
                 break;
             case TSSyntaxKind.FunctionType:
                 break;
@@ -170,7 +176,7 @@ public static class Generator
             case TSSyntaxKind.TypeLiteral:
                 break;
             case TSSyntaxKind.ArrayType:
-                break;
+                return SyntaxFactory.ParseTypeName(ConvertType(((ArrayType)node).ElementType) + "[]");
             case TSSyntaxKind.TupleType:
                 break;
             case TSSyntaxKind.UnionType:
