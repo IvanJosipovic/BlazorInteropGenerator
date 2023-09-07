@@ -6,7 +6,7 @@ using System.Collections.Immutable;
 using System.Reflection;
 using Xunit;
 
-namespace BlazorInterpGenerator.Tests.SourceGenerator;
+namespace BlazorInteropGenerator.Tests.SourceGenerator;
 
 public class GeneratorTests : TestsBase
 {
@@ -18,7 +18,9 @@ public class GeneratorTests : TestsBase
 
             namespace MyCode
             {
-                [BlazorInteropGeneratorAttribute("test.d.ts")]
+                [BlazorInteropGeneratorAttribute("test.d.ts", "SomeType")]
+                public partial interface SomeType {}
+
                 public class Program
                 {
                     public static void Main(string[] args)
@@ -33,7 +35,6 @@ public class GeneratorTests : TestsBase
             export interface SomeType {
               name: string;
               length: number;
-              extras?: string[];
             }
             """;
         var compilation = CreateCompilation(userSource);
@@ -43,6 +44,8 @@ public class GeneratorTests : TestsBase
             .AddAdditionalTexts(ImmutableArray.CreateRange(new List<AdditionalText>() { new CustomAdditionalText("test.d.ts", tsd) })); ;
 
         driver.RunGeneratorsAndUpdateCompilation(compilation, out var updatedCompilation, out var diagnostics);
+
+        var code = updatedCompilation.SyntaxTrees.ToList()[1].ToString();
 
         Assert.Empty(diagnostics);
         Assert.Empty(updatedCompilation.GetDiagnostics());

@@ -5,14 +5,14 @@ using Xunit;
 using FluentAssertions;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace BlazorInterpGenerator.Tests
+namespace BlazorInteropGenerator.Tests;
+
+public class CodeGenerationTests
 {
-    public class CodeGenerationTests
+    [Fact]
+    public void Interface()
     {
-        [Fact]
-        public void Interface()
-        {
-            var tsd = """
+        var tsd = """
                 /* Interface Comment
                  * line2
                 */
@@ -20,140 +20,139 @@ namespace BlazorInterpGenerator.Tests
                 }
                 """;
 
-            var syntaxFactory = BlazorInteropGenerator.BlazorInteropGenerator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration);
+        var syntaxFactory = Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
 
-            var code = syntaxFactory
-               .NormalizeWhitespace()
-               .ToFullString();
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
 
-            syntaxFactory.Members.Count.Should().Be(1);
-            var @interface = syntaxFactory.Members[0] as InterfaceDeclarationSyntax;
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
 
-            @interface.Modifiers.Count.Should().Be(2);
-            @interface.Modifiers[0].Value.Should().Be("public");
-            @interface.Modifiers[1].Value.Should().Be("partial");
+        @interface.Modifiers.Count.Should().Be(2);
+        @interface.Modifiers[0].Value.Should().Be("public");
+        @interface.Modifiers[1].Value.Should().Be("partial");
 
-            @interface.Identifier.Text.Should().Be("SomeType");
-        }
+        @interface.Identifier.Text.Should().Be("SomeType");
+    }
 
-        [Fact]
-        public void InterfacePropertyString()
-        {
-            var tsd = """
+    [Fact]
+    public void InterfacePropertyString()
+    {
+        var tsd = """
                 export interface SomeType {
                   prop1: string;
                 }
                 """;
 
-            var syntaxFactory = BlazorInteropGenerator.BlazorInteropGenerator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration);
+        var syntaxFactory = Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
 
-            var code = syntaxFactory
-               .NormalizeWhitespace()
-               .ToFullString();
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
 
-            syntaxFactory.Members.Count.Should().Be(1);
-            var @interface = syntaxFactory.Members[0] as InterfaceDeclarationSyntax;
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
 
-            var prop = @interface.Members[0] as PropertyDeclarationSyntax;
+        var prop = @interface.Members[0] as PropertyDeclarationSyntax;
 
-            prop.Modifiers.Count.Should().Be(1);
-            prop.Modifiers[0].Value.Should().Be("public");
+        prop.Modifiers.Count.Should().Be(1);
+        prop.Modifiers[0].Value.Should().Be("public");
 
-            prop.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
+        prop.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
 
-            prop.Identifier.Text.Should().Be("prop1");
+        prop.Identifier.Text.Should().Be("prop1");
 
-            prop.AccessorList.Accessors.Count.Should().Be(2);
-            prop.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
-            prop.AccessorList.Accessors[1].Kind().Should().Be(SyntaxKind.SetAccessorDeclaration);
-        }
+        prop.AccessorList.Accessors.Count.Should().Be(2);
+        prop.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
+        prop.AccessorList.Accessors[1].Kind().Should().Be(SyntaxKind.SetAccessorDeclaration);
+    }
 
-        [Fact]
-        public void InterfacePropertyNumber()
-        {
-            var tsd = """
+    [Fact]
+    public void InterfacePropertyNumber()
+    {
+        var tsd = """
                 export interface SomeType {
                   prop1: number;
                 }
                 """;
 
-            var syntaxFactory = BlazorInteropGenerator.BlazorInteropGenerator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration);
+        var syntaxFactory = Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
 
-            var code = syntaxFactory
-               .NormalizeWhitespace()
-               .ToFullString();
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
 
-            syntaxFactory.Members.Count.Should().Be(1);
-            var @interface = syntaxFactory.Members[0] as InterfaceDeclarationSyntax;
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
 
-            var prop = @interface.Members[0] as PropertyDeclarationSyntax;
+        var prop = @interface.Members[0] as PropertyDeclarationSyntax;
 
-            prop.Modifiers.Count.Should().Be(1);
-            prop.Modifiers[0].Value.Should().Be("public");
+        prop.Modifiers.Count.Should().Be(1);
+        prop.Modifiers[0].Value.Should().Be("public");
 
-            prop.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("double");
+        prop.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("double");
 
-            prop.Identifier.Text.Should().Be("prop1");
+        prop.Identifier.Text.Should().Be("prop1");
 
-            prop.AccessorList.Accessors.Count.Should().Be(2);
-            prop.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
-            prop.AccessorList.Accessors[1].Kind().Should().Be(SyntaxKind.SetAccessorDeclaration);
-        }
+        prop.AccessorList.Accessors.Count.Should().Be(2);
+        prop.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
+        prop.AccessorList.Accessors[1].Kind().Should().Be(SyntaxKind.SetAccessorDeclaration);
+    }
 
-        [Fact]
-        public void InterfaceMethodVoid()
-        {
-            var tsd = """
+    [Fact]
+    public void InterfaceMethodVoid()
+    {
+        var tsd = """
                 export interface SomeType {
                   method(): void;
                 }
                 """;
 
-            var syntaxFactory = BlazorInteropGenerator.BlazorInteropGenerator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration);
+        var syntaxFactory = Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
 
-            var code = syntaxFactory
-               .NormalizeWhitespace()
-               .ToFullString();
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
 
-            syntaxFactory.Members.Count.Should().Be(1);
-            var @interface = syntaxFactory.Members[0] as InterfaceDeclarationSyntax;
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
 
-            var prop = @interface.Members[0] as MethodDeclarationSyntax;
+        var prop = @interface.Members[0] as MethodDeclarationSyntax;
 
-            prop.Modifiers.Count.Should().Be(1);
-            prop.Modifiers[0].Value.Should().Be("public");
+        prop.Modifiers.Count.Should().Be(1);
+        prop.Modifiers[0].Value.Should().Be("public");
 
-            prop.ReturnType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("void");
+        prop.ReturnType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("void");
 
-            prop.Identifier.Text.Should().Be("method");
-        }
+        prop.Identifier.Text.Should().Be("method");
+    }
 
-        [Fact]
-        public void InterfaceMethodString()
-        {
-            var tsd = """
+    [Fact]
+    public void InterfaceMethodString()
+    {
+        var tsd = """
                 export interface SomeType {
                   method(): string;
                 }
                 """;
 
-            var syntaxFactory = BlazorInteropGenerator.BlazorInteropGenerator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration);
+        var syntaxFactory = Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
 
-            var code = syntaxFactory
-               .NormalizeWhitespace()
-               .ToFullString();
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
 
-            syntaxFactory.Members.Count.Should().Be(1);
-            var @interface = syntaxFactory.Members[0] as InterfaceDeclarationSyntax;
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
 
-            var prop = @interface.Members[0] as MethodDeclarationSyntax;
+        var prop = @interface.Members[0] as MethodDeclarationSyntax;
 
-            prop.Modifiers.Count.Should().Be(1);
-            prop.Modifiers[0].Value.Should().Be("public");
+        prop.Modifiers.Count.Should().Be(1);
+        prop.Modifiers[0].Value.Should().Be("public");
 
-            prop.ReturnType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
+        prop.ReturnType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
 
-            prop.Identifier.Text.Should().Be("method");
-        }
+        prop.Identifier.Text.Should().Be("method");
     }
 }

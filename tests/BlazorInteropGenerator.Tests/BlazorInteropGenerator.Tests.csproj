@@ -33,9 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="definitions\*.d.ts">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    <AdditionalFiles Include="*.d.ts" />
   </ItemGroup>
 
 </Project>
