@@ -1,10 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Immutable;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using TSDParser.Enums;
 
@@ -59,7 +56,7 @@ public class SourceGenerator : IIncrementalGenerator
         var response = new ObjectToGenerate()
         {
             Name = attr.ConstructorArguments[0].Value.ToString(),
-            ObjectName = attr.ConstructorArguments[1].Value.ToString(),
+            ObjectName = context.TargetSymbol.Name,
             Namespace = context.TargetSymbol.ContainingNamespace.ToString(),
             SyntaxKind = context.TargetNode.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.InterfaceDeclaration) ? SyntaxKind.InterfaceDeclaration : SyntaxKind.ClassDeclaration,
         };
