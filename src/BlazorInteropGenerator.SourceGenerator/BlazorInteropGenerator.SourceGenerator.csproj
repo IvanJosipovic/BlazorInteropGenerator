@@ -10,7 +10,7 @@
     <PackageId>BlazorInteropGenerator.SourceGenerator</PackageId>
     <Authors>Ivan Josipovic</Authors>
     <Description>Converts TypeScript Definition to C# Interfaces</Description>
-    <PackageTags></PackageTags>
+    <PackageTags>TypeScript Defenition Interface Generator</PackageTags>
     <RepositoryUrl>https://github.com/IvanJosipovic/BlazorInteropGenerator</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -57,6 +57,5 @@
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
-
 
 </Project>
