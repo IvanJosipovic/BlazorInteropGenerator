@@ -163,11 +163,10 @@ public static class Generator
                 break;
             case TSSyntaxKind.TypeReference:
                 // Handle Types
-                var typeReference = node as TypeReference;
+                var typeReference = (TypeReference)node;
                 if (typeReference.TypeName.Text == "Array")
                 {
-                    var typeReference2 = ConvertType(typeReference.TypeArguments[0]);
-                    return SyntaxFactory.ParseTypeName(typeReference2 + "[]");
+                    return SyntaxFactory.ParseTypeName(ConvertType(typeReference.TypeArguments[0]) + "[]");
                 }
                 break;
             case TSSyntaxKind.FunctionType:
@@ -177,10 +176,7 @@ public static class Generator
             case TSSyntaxKind.TypeLiteral:
                 break;
             case TSSyntaxKind.ArrayType:
-                var arrayType = node as ArrayType;
-                var arrayType2 = ConvertType(arrayType.ElementType);
-                return SyntaxFactory.ParseTypeName(arrayType2 + "[]");
-                break;
+                return SyntaxFactory.ParseTypeName(ConvertType(((ArrayType)node).ElementType) + "[]");
             case TSSyntaxKind.TupleType:
                 break;
             case TSSyntaxKind.UnionType:
