@@ -41,7 +41,7 @@ public class GeneratorTests : TestsBase
 
         var @interface = updatedCompilation.SyntaxTrees.Last();
 
-        var code = updatedCompilation.SyntaxTrees.ToList()[1].ToString();
+        var code = updatedCompilation.SyntaxTrees.Last().ToString();
 
         Assert.Empty(diagnostics);
         Assert.Empty(updatedCompilation.GetDiagnostics());
