@@ -2,6 +2,7 @@
 using BlazorInteropGenerator.SourceGenerator;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Immutable;
 using System.Reflection;
 using Xunit;
@@ -16,7 +17,7 @@ public class GeneratorTests : TestsBase
         string userSource = """
             using BlazorInteropGenerator;
 
-            namespace MyCode
+            namespace MyCode.MyTest
             {
                 [BlazorInteropGeneratorAttribute("test.d.ts", "SomeType")]
                 public partial interface SomeType {}
@@ -37,6 +38,8 @@ public class GeneratorTests : TestsBase
             .AddAdditionalTexts(ImmutableArray.CreateRange(new List<AdditionalText>() { new CustomAdditionalText("test.d.ts", tsd) })); ;
 
         driver.RunGeneratorsAndUpdateCompilation(compilation, out var updatedCompilation, out var diagnostics);
+
+        var @interface = updatedCompilation.SyntaxTrees.Last();
 
         var code = updatedCompilation.SyntaxTrees.ToList()[1].ToString();
 

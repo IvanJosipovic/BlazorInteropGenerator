@@ -22,24 +22,7 @@ public static class Generator
     {
         var syntaxFactory = SyntaxFactory.CompilationUnit();
 
-        SourceFile tsd = null;
-        try
-        {
-            tsd = TSDParser.TSDParser.ParseDefinition(typeScriptDefinition);
-        }
-        catch (Exception ex)
-        {
-            if (!Debugger.IsAttached)
-            {
-                Debugger.Launch();
-            }
-            throw;
-        }
-
-        if (!Debugger.IsAttached)
-        {
-            Debugger.Launch();
-        }
+        var tsd = TSDParser.TSDParser.ParseDefinition(typeScriptDefinition);
 
         var @namespaceObj = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(@namespace)).NormalizeWhitespace();
 

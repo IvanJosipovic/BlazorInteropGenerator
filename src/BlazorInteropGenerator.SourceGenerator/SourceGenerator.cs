@@ -44,8 +44,9 @@ public class SourceGenerator : IIncrementalGenerator
         {
             var syntax = Generator.GenerateObjects(combined.Right.First(x => x.Name == combined.Left.Name).Content, combined.Left.ObjectName, combined.Left.SyntaxKind.Value, combined.Left.Namespace);
 
-            var code = syntax.NormalizeWhitespace()
-           .ToFullString();
+            var code = syntax
+                .NormalizeWhitespace()
+                .ToFullString();
 
             spc.AddSource($"Generated.{combined.Left.ObjectName}.cs", code);
         });
@@ -59,7 +60,7 @@ public class SourceGenerator : IIncrementalGenerator
         {
             Name = attr.ConstructorArguments[0].Value.ToString(),
             ObjectName = attr.ConstructorArguments[1].Value.ToString(),
-            Namespace = context.TargetSymbol.ContainingNamespace.Name,
+            Namespace = context.TargetSymbol.ContainingNamespace.ToString(),
             SyntaxKind = context.TargetNode.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.InterfaceDeclaration) ? SyntaxKind.InterfaceDeclaration : SyntaxKind.ClassDeclaration,
         };
 
