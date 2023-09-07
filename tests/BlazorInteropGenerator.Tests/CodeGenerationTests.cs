@@ -29,11 +29,56 @@ public class CodeGenerationTests
         syntaxFactory.Members.Count.Should().Be(1);
         var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
 
+        @interface.GetLeadingTrivia()[0].ToString().Should().Be("/// <summary>");
+        @interface.GetLeadingTrivia()[1].ToString().Should().Be("/// Interface Comment");
+        @interface.GetLeadingTrivia()[2].ToString().Should().Be("/// line2");
+        @interface.GetLeadingTrivia()[3].ToString().Should().Be("/// </summary>");
+
         @interface.Modifiers.Count.Should().Be(2);
         @interface.Modifiers[0].Value.Should().Be("public");
         @interface.Modifiers[1].Value.Should().Be("partial");
 
         @interface.Identifier.Text.Should().Be("SomeType");
+    }
+
+    [Fact]
+    public void ShouldThrowError()
+    {
+        var tsd = """
+                export interface SomeType {
+                  method(): string;
+                }
+                """;
+
+        Assert.Throws<NotSupportedException>(() => Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.AnyKeyword, "Test"));
+    }
+
+    #region Property
+
+    [Fact]
+    public void InterfacePropertyComment()
+    {
+        var tsd = """
+                export interface SomeType {
+                  /* the comment */
+                  prop1: string;
+                }
+                """;
+
+        var syntaxFactory = Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
+
+        prop1.GetLeadingTrivia()[0].ToString().Should().Be("/// <summary>");
+        prop1.GetLeadingTrivia()[1].ToString().Should().Be("/// the comment");
+        prop1.GetLeadingTrivia()[2].ToString().Should().Be("/// </summary>");
     }
 
     [Fact]
@@ -211,6 +256,59 @@ public class CodeGenerationTests
     }
 
     [Fact]
+    public void InterfacePropertyNullable()
+    {
+        var tsd = """
+                export interface SomeType {
+                  prop1?: string;
+                }
+                """;
+
+        var syntaxFactory = Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
+
+        prop1.Type.As<NullableTypeSyntax>().ElementType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
+    }
+
+    #endregion
+
+    #region Method
+
+    [Fact]
+    public void InterfaceMethodComment()
+    {
+        var tsd = """
+                export interface SomeType {
+                  /* the comment */
+                  method(): void;
+                }
+                """;
+
+        var syntaxFactory = Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var method = @interface.Members[0] as MethodDeclarationSyntax;
+
+        method.GetLeadingTrivia()[0].ToString().Should().Be("/// <summary>");
+        method.GetLeadingTrivia()[1].ToString().Should().Be("/// the comment");
+        method.GetLeadingTrivia()[2].ToString().Should().Be("/// </summary>");
+    }
+
+    [Fact]
     public void InterfaceMethodVoid()
     {
         var tsd = """
@@ -228,14 +326,14 @@ public class CodeGenerationTests
         syntaxFactory.Members.Count.Should().Be(1);
         var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
 
-        var prop = @interface.Members[0] as MethodDeclarationSyntax;
+        var method = @interface.Members[0] as MethodDeclarationSyntax;
 
-        prop.Modifiers.Count.Should().Be(1);
-        prop.Modifiers[0].Value.Should().Be("public");
+        method.Modifiers.Count.Should().Be(1);
+        method.Modifiers[0].Value.Should().Be("public");
 
-        prop.ReturnType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("void");
+        method.ReturnType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("void");
 
-        prop.Identifier.Text.Should().Be("method");
+        method.Identifier.Text.Should().Be("method");
     }
 
     [Fact]
@@ -256,25 +354,16 @@ public class CodeGenerationTests
         syntaxFactory.Members.Count.Should().Be(1);
         var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
 
-        var prop = @interface.Members[0] as MethodDeclarationSyntax;
+        var method = @interface.Members[0] as MethodDeclarationSyntax;
 
-        prop.Modifiers.Count.Should().Be(1);
-        prop.Modifiers[0].Value.Should().Be("public");
+        method.Modifiers.Count.Should().Be(1);
+        method.Modifiers[0].Value.Should().Be("public");
 
-        prop.ReturnType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
+        method.ReturnType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
 
-        prop.Identifier.Text.Should().Be("method");
+        method.Identifier.Text.Should().Be("method");
     }
 
-    [Fact]
-    public void ShouldThrowError()
-    {
-        var tsd = """
-                export interface SomeType {
-                  method(): string;
-                }
-                """;
 
-        Assert.Throws<NotSupportedException>(() => Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.AnyKeyword, "Test"));
-    }
+    #endregion
 }

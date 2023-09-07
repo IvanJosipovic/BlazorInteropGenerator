@@ -55,14 +55,7 @@ public static class Generator
 
         if (interfaceDeclaration.JSDoc != null)
         {
-            var comment = SyntaxFactory.Comment("/// " + interfaceDeclaration.JSDoc.Comment);
-
-            //var comment2 = SyntaxFactory.SyntaxTrivia(Microsoft.CodeAnalysis.CSharp.SyntaxKind.DocumentationCommentExteriorTrivia, interfaceDeclaration.JSDoc.Comment);
-
-            @interface = @interface.WithLeadingTrivia(new SyntaxTriviaList(new SyntaxTrivia[]
-            {
-                comment
-            }));
+            @interface = AddComment(@interface, interfaceDeclaration.JSDoc.Comment) as InterfaceDeclarationSyntax;
         }
 
         foreach (var statement in interfaceDeclaration.Statements)
@@ -71,11 +64,18 @@ public static class Generator
             {
                 var propertySignature = statement as PropertySignature;
 
-                var propertyDeclaration = SyntaxFactory.PropertyDeclaration(ConvertType(propertySignature.Type), propertySignature.Name.Text)
+                TypeSyntax type = propertySignature.QuestionToken == null ? ConvertType(propertySignature.Type) : SyntaxFactory.NullableType(ConvertType(propertySignature.Type));
+
+                var propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, propertySignature.Name.Text)
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                     .AddAccessorListAccessors(
                         SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
                         SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
+
+                if (propertySignature.JSDoc != null)
+                {
+                    propertyDeclaration = AddComment(propertyDeclaration, propertySignature.JSDoc.Comment) as PropertyDeclarationSyntax;
+                }
 
                 @interface = @interface.AddMembers(propertyDeclaration);
             }
@@ -88,6 +88,11 @@ public static class Generator
 
                 methodDeclaration = methodDeclaration.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
 
+                if (methodSignature.JSDoc != null)
+                {
+                    methodDeclaration = AddComment(methodDeclaration, methodSignature.JSDoc.Comment) as MethodDeclarationSyntax;
+                }
+
                 @interface = @interface.AddMembers(methodDeclaration);
             }
             else
@@ -99,6 +104,16 @@ public static class Generator
         syntaxFactory = syntaxFactory.AddMembers(@interface);
 
         return syntaxFactory;
+    }
+
+    public static SyntaxNode AddComment(SyntaxNode node, string comment)
+    {
+        var comments = new List<SyntaxTrivia>();
+        comments.Add(SyntaxFactory.Comment("/// <summary>"));
+        comments.AddRange(comment.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries).Select(x => SyntaxFactory.Comment("/// " + x)));
+        comments.Add(SyntaxFactory.Comment("/// </summary>"));
+
+        return node.WithLeadingTrivia(new SyntaxTriviaList(comments));
     }
 
     private static TypeSyntax ConvertType(Node node)
