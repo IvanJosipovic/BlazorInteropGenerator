@@ -3,15 +3,20 @@ export interface SomeType {
     /* my comment
      * multi line
     */
-    test1?: string;
+    prop1?: string;
 
-    test2: string[];
+    prop2: string[];
 
-    test3: number;
+    prop3: number;
 
-    test4: any;
+    prop4: any;
 
-    test5: boolean;
+    prop5: boolean;
 
-    test6: string;
+    prop6: string;
+
+    method?(): string;
+
+    /* my comment */
+    method(prop: string, prop2: number): string;
 }
