@@ -3,10 +3,8 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using TSDParser.Class;
-using TSDParser.Enums;
 using TSDParser.Interfaces;
 using SyntaxKind = Microsoft.CodeAnalysis.CSharp.SyntaxKind;
 using TSSyntaxKind = TSDParser.Enums.SyntaxKind;
@@ -64,7 +62,7 @@ public static class Generator
             {
                 var propertySignature = statement as PropertySignature;
 
-                TypeSyntax type = propertySignature.QuestionToken == null ? ConvertType(propertySignature.Type) : SyntaxFactory.NullableType(ConvertType(propertySignature.Type));
+                var type = propertySignature.QuestionToken == null ? ConvertType(propertySignature.Type) : SyntaxFactory.NullableType(ConvertType(propertySignature.Type));
 
                 var propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, propertySignature.Name.Text)
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
@@ -83,7 +81,9 @@ public static class Generator
             {
                 var methodSignature = statement as MethodSignature;
 
-                var methodDeclaration = SyntaxFactory.MethodDeclaration(ConvertType(methodSignature.Type), methodSignature.Name.Text)
+                var returnType = methodSignature.QuestionToken == null ? ConvertType(methodSignature.Type) : SyntaxFactory.NullableType(ConvertType(methodSignature.Type));
+
+                var methodDeclaration = SyntaxFactory.MethodDeclaration(returnType, methodSignature.Name.Text)
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
 
                 methodDeclaration = methodDeclaration.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
@@ -91,6 +91,21 @@ public static class Generator
                 if (methodSignature.JSDoc != null)
                 {
                     methodDeclaration = AddComment(methodDeclaration, methodSignature.JSDoc.Comment) as MethodDeclarationSyntax;
+                }
+
+                if (methodSignature.Parameters?.Any() == true)
+                {
+                    var parameters = new List<ParameterSyntax>();
+
+                    foreach (var item in methodSignature.Parameters)
+                    {
+                        var type = item.QuestionToken == null ? ConvertType(item.Type) : SyntaxFactory.NullableType(ConvertType(item.Type));
+
+                        var param = SyntaxFactory.Parameter(SyntaxFactory.Identifier(item.Name.Text)).WithType(type);
+                        parameters.Add(param);
+                    }
+
+                    methodDeclaration = methodDeclaration.WithParameterList(SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(parameters)));
                 }
 
                 @interface = @interface.AddMembers(methodDeclaration);
@@ -178,7 +193,7 @@ public static class Generator
                 break;
             case TSSyntaxKind.TypeReference:
                 // Handle Types
-                var typeReference = (TypeReference)node;
+                var typeReference = (TSDParser.Class.TypeReference)node;
                 if (typeReference.TypeName.Text == "Array")
                 {
                     return SyntaxFactory.ParseTypeName(ConvertType(typeReference.TypeArguments[0]) + "[]");

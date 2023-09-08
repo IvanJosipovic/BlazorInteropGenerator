@@ -364,6 +364,81 @@ public class CodeGenerationTests
         method.Identifier.Text.Should().Be("method");
     }
 
+    [Fact]
+    public void InterfaceMethodStringNullable()
+    {
+        var tsd = """
+                export interface SomeType {
+                  method?(): string;
+                }
+                """;
+
+        var syntaxFactory = Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var method = @interface.Members[0] as MethodDeclarationSyntax;
+
+        method.Modifiers.Count.Should().Be(1);
+        method.Modifiers[0].Value.Should().Be("public");
+
+        method.ReturnType.As<NullableTypeSyntax>().ElementType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
+
+        method.Identifier.Text.Should().Be("method");
+    }
+
+    [Fact]
+    public void InterfaceMethodParameter()
+    {
+        var tsd = """
+                export interface SomeType {
+                  method(prop1: string): void;
+                }
+                """;
+
+        var syntaxFactory = Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var method = @interface.Members[0] as MethodDeclarationSyntax;
+
+        method.ParameterList.Parameters.Count.Should().Be(1);
+        method.ParameterList.Parameters[0].Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
+    }
+
+    [Fact]
+    public void InterfaceMethodParameterNullable()
+    {
+        var tsd = """
+                export interface SomeType {
+                  method(prop1?: string): void;
+                }
+                """;
+
+        var syntaxFactory = Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var method = @interface.Members[0] as MethodDeclarationSyntax;
+
+        method.ParameterList.Parameters.Count.Should().Be(1);
+        method.ParameterList.Parameters[0].Type.As<NullableTypeSyntax>().ElementType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
+    }
 
     #endregion
 }
