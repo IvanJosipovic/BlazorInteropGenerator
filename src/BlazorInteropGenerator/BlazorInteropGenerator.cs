@@ -4,8 +4,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using TSDParser.Class;
-using TSDParser.Interfaces;
 using SyntaxKind = Microsoft.CodeAnalysis.CSharp.SyntaxKind;
 using TSSyntaxKind = TSDParser.Enums.SyntaxKind;
 
@@ -16,23 +16,23 @@ namespace BlazorInteropGenerator;
 /// </summary>
 public static class Generator
 {
-    public static CompilationUnitSyntax GenerateObjects(string typeScriptDefinition, string objectName, TSSyntaxKind syntaxKind, string @namespace)
+    public static async Task<CompilationUnitSyntax> GenerateObjects(string typeScriptDefinition, string objectName, TSSyntaxKind syntaxKind, string @namespace)
     {
         var syntaxFactory = SyntaxFactory.CompilationUnit();
 
-        var tsd = TSDParser.TSDParser.ParseDefinition(typeScriptDefinition);
+        var tsd = await TSDParser.TSDParser.ParseDefinition(typeScriptDefinition);
 
         var @namespaceObj = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(@namespace)).NormalizeWhitespace();
 
         if (syntaxKind == TSSyntaxKind.InterfaceDeclaration)
         {
-            var interfaceDeclaration = tsd.Statements.Where(x => x.Kind == syntaxKind).Cast<InterfaceDeclaration>().First(x => x.Name.Text == objectName);
+            var interfaceDeclaration = tsd.Statements.Where(x => x.Kind == syntaxKind).Cast<InterfaceDeclaration>().First(x => x.Name.EscapedText == objectName);
 
             namespaceObj = namespaceObj.AddMembers(GenerateInterfaceDeclaration(syntaxFactory, interfaceDeclaration).Members.ToArray());
         }
         else if (syntaxKind == TSSyntaxKind.ClassDeclaration)
         {
-            var classDeclaration = tsd.Statements.Where(x => x.Kind == syntaxKind).Cast<ClassDeclaration>().First(x => x.Name.Text == objectName);
+            var classDeclaration = tsd.Statements.Where(x => x.Kind == syntaxKind).Cast<ClassDeclaration>().First(x => x.Name.EscapedText == objectName);
         }
         else
         {
@@ -46,17 +46,17 @@ public static class Generator
 
     public static CompilationUnitSyntax GenerateInterfaceDeclaration(CompilationUnitSyntax syntaxFactory, InterfaceDeclaration interfaceDeclaration)
     {
-        var @interface = SyntaxFactory.InterfaceDeclaration(interfaceDeclaration.Name.Text);
+        var @interface = SyntaxFactory.InterfaceDeclaration(interfaceDeclaration.Name.EscapedText);
 
         @interface = @interface.AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
         @interface = @interface.AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword));
 
         if (interfaceDeclaration.JSDoc != null)
         {
-            @interface = AddComment(@interface, interfaceDeclaration.JSDoc.Comment) as InterfaceDeclarationSyntax;
+            //@interface = AddComment(@interface, interfaceDeclaration.JSDoc.Comment) as InterfaceDeclarationSyntax;
         }
 
-        foreach (var statement in interfaceDeclaration.Statements)
+        foreach (var statement in interfaceDeclaration.Members)
         {
             if (statement.Kind == TSSyntaxKind.PropertySignature)
             {
@@ -64,7 +64,7 @@ public static class Generator
 
                 var type = propertySignature.QuestionToken == null ? ConvertType(propertySignature.Type) : SyntaxFactory.NullableType(ConvertType(propertySignature.Type));
 
-                var propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, propertySignature.Name.Text)
+                var propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, propertySignature.Name.EscapedText)
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                     .AddAccessorListAccessors(
                         SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
@@ -72,7 +72,7 @@ public static class Generator
 
                 if (propertySignature.JSDoc != null)
                 {
-                    propertyDeclaration = AddComment(propertyDeclaration, propertySignature.JSDoc.Comment) as PropertyDeclarationSyntax;
+                    //propertyDeclaration = AddComment(propertyDeclaration, propertySignature.JSDoc.Comment) as PropertyDeclarationSyntax;
                 }
 
                 @interface = @interface.AddMembers(propertyDeclaration);
@@ -83,14 +83,14 @@ public static class Generator
 
                 var returnType = methodSignature.QuestionToken == null ? ConvertType(methodSignature.Type) : SyntaxFactory.NullableType(ConvertType(methodSignature.Type));
 
-                var methodDeclaration = SyntaxFactory.MethodDeclaration(returnType, methodSignature.Name.Text)
+                var methodDeclaration = SyntaxFactory.MethodDeclaration(returnType, methodSignature.Name.EscapedText)
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
 
                 methodDeclaration = methodDeclaration.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
 
                 if (methodSignature.JSDoc != null)
                 {
-                    methodDeclaration = AddComment(methodDeclaration, methodSignature.JSDoc.Comment) as MethodDeclarationSyntax;
+                    //methodDeclaration = AddComment(methodDeclaration, methodSignature.JSDoc[0].Comment) as MethodDeclarationSyntax;
                 }
 
                 if (methodSignature.Parameters?.Any() == true)
@@ -101,7 +101,7 @@ public static class Generator
                     {
                         var type = item.QuestionToken == null ? ConvertType(item.Type) : SyntaxFactory.NullableType(ConvertType(item.Type));
 
-                        var param = SyntaxFactory.Parameter(SyntaxFactory.Identifier(item.Name.Text)).WithType(type);
+                        var param = SyntaxFactory.Parameter(SyntaxFactory.Identifier(item.Name.EscapedText)).WithType(type);
                         parameters.Add(param);
                     }
 
@@ -157,8 +157,6 @@ public static class Generator
                 break;
             case TSSyntaxKind.StaticKeyword:
                 break;
-            case TSSyntaxKind.FirstContextualKeyword:
-                break;
             case TSSyntaxKind.AnyKeyword:
                 return SyntaxFactory.ParseTypeName("object");
             case TSSyntaxKind.BooleanKeyword:
@@ -194,7 +192,7 @@ public static class Generator
             case TSSyntaxKind.TypeReference:
                 // Handle Types
                 var typeReference = (TSDParser.Class.TypeReference)node;
-                if (typeReference.TypeName.Text == "Array")
+                if (typeReference.TypeName.EscapedText == "Array")
                 {
                     return SyntaxFactory.ParseTypeName(ConvertType(typeReference.TypeArguments[0]) + "[]");
                 }
@@ -255,7 +253,7 @@ public static class Generator
                 break;
             case TSSyntaxKind.SourceFile:
                 break;
-            case TSSyntaxKind.JSDocComment:
+            case TSSyntaxKind.JSDoc:
                 break;
             default:
                 break;

@@ -32,8 +32,4 @@
     <ProjectReference Include="..\..\src\BlazorInteropGenerator\BlazorInteropGenerator.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <AdditionalFiles Include="*.d.ts" />
-  </ItemGroup>
-
 </Project>

@@ -18,5 +18,5 @@ export interface SomeType {
     method?(): string;
 
     /* my comment */
-    method(prop: string, prop2: number): string;
+    method2(prop: string, prop2: number): string;
 }

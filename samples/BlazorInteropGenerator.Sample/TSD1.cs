@@ -17,7 +17,7 @@ public class SomeClass : SomeType
         throw new NotImplementedException();
     }
 
-    public string method(string prop, double prop2)
+    public string method2(string prop, double prop2)
     {
         throw new NotImplementedException();
     }

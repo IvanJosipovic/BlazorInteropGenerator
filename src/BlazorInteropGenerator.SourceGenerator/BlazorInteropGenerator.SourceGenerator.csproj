@@ -10,7 +10,7 @@
     <PackageId>BlazorInteropGenerator.SourceGenerator</PackageId>
     <Authors>Ivan Josipovic</Authors>
     <Description>Converts TypeScript Definition to C# Interfaces</Description>
-    <PackageTags>TypeScript Defenition Interface Generator</PackageTags>
+    <PackageTags>TypeScript Definition Interface Generator</PackageTags>
     <RepositoryUrl>https://github.com/IvanJosipovic/BlazorInteropGenerator</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -29,12 +29,41 @@
 
     <None Include="$(OutputPath)\BlazorInteropGenerator.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
-    <PackageReference Include="TSDParser" Version="1.0.0-alpha.7" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="TSDParser" Version="1.0.0-alpha.9" GeneratePathProperty="true" PrivateAssets="all" />
     <None Include="$(PKGTSDParser)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
-    <PackageReference Include="Sprache" Version="2.3.1" GeneratePathProperty="true" PrivateAssets="all" />
-    <None Include="$(PKGSprache)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <PackageReference Include="Jering.Javascript.NodeJS" Version="6.3.1" GeneratePathProperty="true" PrivateAssets="all" />
+    <None Include="$(PKGJering_Javascript_NodeJS)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
+    <PackageReference Include="System.Text.Json" Version="8.0.0-preview.7.23375.6" GeneratePathProperty="true" PrivateAssets="all" />
+    <None Include="$(PKGSystem_Text_Json)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" GeneratePathProperty="true" PrivateAssets="all" />
+    <None Include="$(PKGMicrosoft_Extensions_DependencyInjection)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0-preview.7.23375.6" GeneratePathProperty="true" PrivateAssets="all" />
+    <None Include="$(PKGMicrosoft_Bcl_AsyncInterfaces)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" GeneratePathProperty="true" PrivateAssets="all" />
+    <None Include="$(PKGMicrosoft_Extensions_DependencyInjection_Abstractions)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" GeneratePathProperty="true" PrivateAssets="all" />
+    <None Include="$(PKGMicrosoft_Extensions_Logging)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" GeneratePathProperty="true" PrivateAssets="all" />
+    <None Include="$(PKGMicrosoft_Extensions_Logging_Abstractions)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+    <PackageReference Include="Microsoft.Extensions.Options" Version="7.0.1" GeneratePathProperty="true" PrivateAssets="all" />
+    <None Include="$(PKGMicrosoft_Extensions_Options)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+    <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" GeneratePathProperty="true" PrivateAssets="all" />
+    <None Include="$(PKGMicrosoft_Extensions_Http)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+    <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.2.0" GeneratePathProperty="true" PrivateAssets="all" />
+    <None Include="$(PKGMicrosoft_AspNetCore_Hosting_Abstractions)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+    <PackageReference Include="System.Text.Encodings.Web" Version="8.0.0-preview.7.23375.6" GeneratePathProperty="true" PrivateAssets="all" />
+    <None Include="$(PKGSystem_Text_Encodings_Web)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -48,12 +77,32 @@
   <Target Name="GetDependencyTargetPaths">
     <ItemGroup>
       <TargetPathWithTargetPlatformMoniker Include="$(PKGTSDParser)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
-      <TargetPathWithTargetPlatformMoniker Include="$(PKGSprache)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PKGJering_Javascript_NodeJS)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PKGSystem_Text_Json)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PKGMicrosoft_Extensions_DependencyInjection)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PKGMicrosoft_Bcl_AsyncInterfaces)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PKGMicrosoft_Extensions_DependencyInjection_Abstractions)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PKGMicrosoft_Extensions_Logging)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PKGMicrosoft_Extensions_Logging_Abstractions)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PKGMicrosoft_Extensions_Options)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PKGMicrosoft_Extensions_Http)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PKGMicrosoft_AspNetCore_Hosting_Abstractions)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PKGSystem_Text_Encodings_Web)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+
     </ItemGroup>
   </Target>
 
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="C:\Users\ivanj\.nuget\packages\tsdparser\1.0.0-alpha.8\contentFiles\any\netstandard2.0\typescript.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="C:\Users\ivanj\.nuget\packages\tsdparser\1.0.0-alpha.8\contentFiles\any\netstandard2.0\wrapper.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

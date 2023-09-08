@@ -39,7 +39,7 @@ public class SourceGenerator : IIncrementalGenerator
         // generate a class that contains their values as const strings
         initContext.RegisterSourceOutput(combined, (spc, combined) =>
         {
-            var syntax = Generator.GenerateObjects(combined.Right.First(x => x.Name == combined.Left.Name).Content, combined.Left.ObjectName, combined.Left.SyntaxKind.Value, combined.Left.Namespace);
+            var syntax = Generator.GenerateObjects(combined.Right.First(x => x.Name == combined.Left.Name).Content, combined.Left.ObjectName, combined.Left.SyntaxKind.Value, combined.Left.Namespace).GetAwaiter().GetResult();
 
             var code = syntax
                 .NormalizeWhitespace()
