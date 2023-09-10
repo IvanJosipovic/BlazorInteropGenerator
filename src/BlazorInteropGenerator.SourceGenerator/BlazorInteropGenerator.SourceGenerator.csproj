@@ -29,7 +29,7 @@
 
     <None Include="$(OutputPath)\BlazorInteropGenerator.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
-    <PackageReference Include="TSDParser" Version="1.0.0-alpha.9" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="TSDParser" Version="1.0.0-alpha.11" GeneratePathProperty="true" PrivateAssets="all" />
     <None Include="$(PKGTSDParser)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
     <PackageReference Include="Jering.Javascript.NodeJS" Version="6.3.1" GeneratePathProperty="true" PrivateAssets="all" />
@@ -94,15 +94,6 @@
 
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Update="C:\Users\ivanj\.nuget\packages\tsdparser\1.0.0-alpha.8\contentFiles\any\netstandard2.0\typescript.js">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="C:\Users\ivanj\.nuget\packages\tsdparser\1.0.0-alpha.8\contentFiles\any\netstandard2.0\wrapper.js">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
 
 </Project>

@@ -33,6 +33,8 @@ public static class Generator
         else if (syntaxKind == TSSyntaxKind.ClassDeclaration)
         {
             var classDeclaration = tsd.Statements.Where(x => x.Kind == syntaxKind).Cast<ClassDeclaration>().First(x => x.Name.EscapedText == objectName);
+
+            namespaceObj = namespaceObj.AddMembers(GenerateClassDeclaration(syntaxFactory, classDeclaration).Members.ToArray());
         }
         else
         {
@@ -53,51 +55,51 @@ public static class Generator
 
         if (interfaceDeclaration.JSDoc != null)
         {
-            //@interface = AddComment(@interface, interfaceDeclaration.JSDoc.Comment) as InterfaceDeclarationSyntax;
+            @interface = AddComment(@interface, interfaceDeclaration.JSDoc) as InterfaceDeclarationSyntax;
         }
 
         foreach (var statement in interfaceDeclaration.Members)
         {
             if (statement.Kind == TSSyntaxKind.PropertySignature)
             {
-                var propertySignature = statement as PropertySignature;
+                var property = statement as PropertySignature;
 
-                var type = propertySignature.QuestionToken == null ? ConvertType(propertySignature.Type) : SyntaxFactory.NullableType(ConvertType(propertySignature.Type));
+                var type = property.QuestionToken == null ? ConvertType(property.Type) : SyntaxFactory.NullableType(ConvertType(property.Type));
 
-                var propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, propertySignature.Name.EscapedText)
+                var propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, property.Name.EscapedText)
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                     .AddAccessorListAccessors(
                         SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
                         SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
 
-                if (propertySignature.JSDoc != null)
+                if (property.JSDoc != null)
                 {
-                    //propertyDeclaration = AddComment(propertyDeclaration, propertySignature.JSDoc.Comment) as PropertyDeclarationSyntax;
+                    propertyDeclaration = AddComment(propertyDeclaration, property.JSDoc) as PropertyDeclarationSyntax;
                 }
 
                 @interface = @interface.AddMembers(propertyDeclaration);
             }
             else if (statement.Kind == TSSyntaxKind.MethodSignature)
             {
-                var methodSignature = statement as MethodSignature;
+                var method = statement as MethodSignature;
 
-                var returnType = methodSignature.QuestionToken == null ? ConvertType(methodSignature.Type) : SyntaxFactory.NullableType(ConvertType(methodSignature.Type));
+                var returnType = method.QuestionToken == null ? ConvertType(method.Type) : SyntaxFactory.NullableType(ConvertType(method.Type));
 
-                var methodDeclaration = SyntaxFactory.MethodDeclaration(returnType, methodSignature.Name.EscapedText)
+                var methodDeclaration = SyntaxFactory.MethodDeclaration(returnType, method.Name.EscapedText)
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
 
                 methodDeclaration = methodDeclaration.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
 
-                if (methodSignature.JSDoc != null)
+                if (method.JSDoc != null)
                 {
-                    //methodDeclaration = AddComment(methodDeclaration, methodSignature.JSDoc[0].Comment) as MethodDeclarationSyntax;
+                    methodDeclaration = AddComment(methodDeclaration, method.JSDoc) as MethodDeclarationSyntax;
                 }
 
-                if (methodSignature.Parameters?.Any() == true)
+                if (method.Parameters?.Any() == true)
                 {
                     var parameters = new List<ParameterSyntax>();
 
-                    foreach (var item in methodSignature.Parameters)
+                    foreach (var item in method.Parameters)
                     {
                         var type = item.QuestionToken == null ? ConvertType(item.Type) : SyntaxFactory.NullableType(ConvertType(item.Type));
 
@@ -121,11 +123,93 @@ public static class Generator
         return syntaxFactory;
     }
 
-    public static SyntaxNode AddComment(SyntaxNode node, string comment)
+    public static CompilationUnitSyntax GenerateClassDeclaration(CompilationUnitSyntax syntaxFactory, ClassDeclaration classDeclaration)
+    {
+        var @class = SyntaxFactory.ClassDeclaration(classDeclaration.Name.EscapedText);
+
+        @class = @class.AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
+        @class = @class.AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword));
+
+        if (classDeclaration.JSDoc != null)
+        {
+            @class = AddComment(@class, classDeclaration.JSDoc) as ClassDeclarationSyntax;
+        }
+
+        foreach (var statement in classDeclaration.Members)
+        {
+            if (statement.Kind == TSSyntaxKind.PropertyDeclaration)
+            {
+                var property = statement as PropertyDeclaration;
+
+                var type = property.QuestionToken == null ? ConvertType(property.Type) : SyntaxFactory.NullableType(ConvertType(property.Type));
+
+                var propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, property.Name.EscapedText)
+                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+                    .AddAccessorListAccessors(
+                        SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
+                        SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
+
+                if (property.JSDoc != null)
+                {
+                    propertyDeclaration = AddComment(propertyDeclaration, property.JSDoc) as PropertyDeclarationSyntax;
+                }
+
+                @class = @class.AddMembers(propertyDeclaration);
+            }
+            else if (statement.Kind == TSSyntaxKind.MethodDeclaration)
+            {
+                var method = statement as MethodDeclaration;
+
+                var returnType = method.QuestionToken == null ? ConvertType(method.Type) : SyntaxFactory.NullableType(ConvertType(method.Type));
+
+                var methodDeclaration = SyntaxFactory.MethodDeclaration(returnType, method.Name.EscapedText)
+                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
+
+                methodDeclaration = methodDeclaration.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+
+                if (method.JSDoc != null)
+                {
+                    methodDeclaration = AddComment(methodDeclaration, method.JSDoc) as MethodDeclarationSyntax;
+                }
+
+                if (method.Parameters?.Any() == true)
+                {
+                    var parameters = new List<ParameterSyntax>();
+
+                    foreach (var item in method.Parameters)
+                    {
+                        var type = item.QuestionToken == null ? ConvertType(item.Type) : SyntaxFactory.NullableType(ConvertType(item.Type));
+
+                        var param = SyntaxFactory.Parameter(SyntaxFactory.Identifier(item.Name.EscapedText)).WithType(type);
+                        parameters.Add(param);
+                    }
+
+                    methodDeclaration = methodDeclaration.WithParameterList(SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(parameters)));
+                }
+
+                methodDeclaration = methodDeclaration.WithBody(SyntaxFactory.Block(SyntaxFactory.ParseStatement("throw new NotImplementedException();")));
+
+                @class = @class.AddMembers(methodDeclaration);
+            }
+            else
+            {
+                throw new NotSupportedException();
+            }
+        }
+
+        syntaxFactory = syntaxFactory.AddMembers(@class);
+
+        return syntaxFactory;
+    }
+
+    public static SyntaxNode AddComment(SyntaxNode node, List<JSDoc> jsDocs)
     {
         var comments = new List<SyntaxTrivia>();
         comments.Add(SyntaxFactory.Comment("/// <summary>"));
-        comments.AddRange(comment.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries).Select(x => SyntaxFactory.Comment("/// " + x)));
+        comments.AddRange(jsDocs.Where(x => x.Comment is not null)
+                        .SelectMany(x => x.Comment.Where(y => y is JSDocText))
+                        .SelectMany(x => ((JSDocText)x).Text.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(x => SyntaxFactory.Comment("/// " + x))));
         comments.Add(SyntaxFactory.Comment("/// </summary>"));
 
         return node.WithLeadingTrivia(new SyntaxTriviaList(comments));

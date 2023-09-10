@@ -1,19 +1,18 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using TSDParser.Class;
 using Xunit;
 using FluentAssertions;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace BlazorInteropGenerator.Tests;
 
-public class CodeGenerationTests
+public class InterfaceCodeGenerationTests
 {
     [Fact]
-    public async Task InterfaceAsync()
+    public async Task Interface()
     {
         var tsd = """
-                /* Interface Comment
+                /** Interface Comment
                  * line2
                 */
                 export interface SomeType {
@@ -29,10 +28,10 @@ public class CodeGenerationTests
         syntaxFactory.Members.Count.Should().Be(1);
         var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
 
-        //@interface.GetLeadingTrivia()[0].ToString().Should().Be("/// <summary>");
-        //@interface.GetLeadingTrivia()[1].ToString().Should().Be("/// Interface Comment");
-        //@interface.GetLeadingTrivia()[2].ToString().Should().Be("/// line2");
-        //@interface.GetLeadingTrivia()[3].ToString().Should().Be("/// </summary>");
+        @interface.GetLeadingTrivia()[0].ToString().Should().Be("/// <summary>");
+        @interface.GetLeadingTrivia()[1].ToString().Should().Be("/// Interface Comment");
+        @interface.GetLeadingTrivia()[2].ToString().Should().Be("/// line2");
+        @interface.GetLeadingTrivia()[3].ToString().Should().Be("/// </summary>");
 
         @interface.Modifiers.Count.Should().Be(2);
         @interface.Modifiers[0].Value.Should().Be("public");
@@ -56,7 +55,7 @@ public class CodeGenerationTests
     #region Property
 
     [Fact]
-    public async Task InterfacePropertyCommentAsync()
+    public async Task InterfacePropertyComment()
     {
         var tsd = """
                 export interface SomeType {
@@ -82,7 +81,7 @@ public class CodeGenerationTests
     }
 
     [Fact]
-    public async Task InterfacePropertyStringAsync()
+    public async Task InterfacePropertyString()
     {
         var tsd = """
                 export interface SomeType {
@@ -114,7 +113,7 @@ public class CodeGenerationTests
     }
 
     [Fact]
-    public async Task InterfacePropertyNumberAsync()
+    public async Task InterfacePropertyNumber()
     {
         var tsd = """
                 export interface SomeType {
@@ -146,7 +145,7 @@ public class CodeGenerationTests
     }
 
     [Fact]
-    public async Task InterfacePropertyArrayAsync()
+    public async Task InterfacePropertyArray()
     {
         var tsd = """
             export interface SomeType {
@@ -192,7 +191,7 @@ public class CodeGenerationTests
     }
 
     [Fact]
-    public async Task InterfacePropertyAnyAsync()
+    public async Task InterfacePropertyAny()
     {
         var tsd = """
                 export interface SomeType {
@@ -224,7 +223,7 @@ public class CodeGenerationTests
     }
 
     [Fact]
-    public async Task InterfacePropertyBooleanAsync()
+    public async Task InterfacePropertyBoolean()
     {
         var tsd = """
                 export interface SomeType {
@@ -256,7 +255,7 @@ public class CodeGenerationTests
     }
 
     [Fact]
-    public async Task InterfacePropertyNullableAsync()
+    public async Task InterfacePropertyNullable()
     {
         var tsd = """
                 export interface SomeType {
@@ -283,7 +282,7 @@ public class CodeGenerationTests
     #region Method
 
     [Fact]
-    public async Task InterfaceMethodCommentAsync()
+    public async Task InterfaceMethodComment()
     {
         var tsd = """
                 export interface SomeType {
@@ -309,7 +308,7 @@ public class CodeGenerationTests
     }
 
     [Fact]
-    public async Task InterfaceMethodVoidAsync()
+    public async Task InterfaceMethodVoid()
     {
         var tsd = """
                 export interface SomeType {
@@ -337,7 +336,7 @@ public class CodeGenerationTests
     }
 
     [Fact]
-    public async Task InterfaceMethodStringAsync()
+    public async Task InterfaceMethodString()
     {
         var tsd = """
                 export interface SomeType {
@@ -365,7 +364,7 @@ public class CodeGenerationTests
     }
 
     [Fact]
-    public async Task InterfaceMethodStringNullableAsync()
+    public async Task InterfaceMethodStringNullable()
     {
         var tsd = """
                 export interface SomeType {
@@ -393,7 +392,7 @@ public class CodeGenerationTests
     }
 
     [Fact]
-    public async Task InterfaceMethodParameterAsync()
+    public async Task InterfaceMethodParameter()
     {
         var tsd = """
                 export interface SomeType {
@@ -417,7 +416,7 @@ public class CodeGenerationTests
     }
 
     [Fact]
-    public async Task InterfaceMethodParameterNullableAsync()
+    public async Task InterfaceMethodParameterNullable()
     {
         var tsd = """
                 export interface SomeType {

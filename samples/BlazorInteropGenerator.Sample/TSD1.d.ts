@@ -1,6 +1,6 @@
-/* interface comment */
+/** interface comment */
 export interface SomeType {
-    /* my comment
+    /** my comment
      * multi line
     */
     prop1?: string;
@@ -17,6 +17,6 @@ export interface SomeType {
 
     method?(): string;
 
-    /* my comment */
+    /** my comment */
     method2(prop: string, prop2: number): string;
 }
