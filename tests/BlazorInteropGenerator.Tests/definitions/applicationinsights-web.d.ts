@@ -53,7 +53,6 @@ import { IPerfManager } from '@microsoft/applicationinsights-core-js';
 import { IPerfManagerProvider } from '@microsoft/applicationinsights-core-js';
 import { IPlugin } from '@microsoft/applicationinsights-core-js';
 import { IProcessTelemetryContext } from '@microsoft/applicationinsights-core-js';
-import { IPromise } from '@nevware21/ts-async';
 import { IPropertiesPlugin } from '@microsoft/applicationinsights-common';
 import { IRequestHeaders } from '@microsoft/applicationinsights-common';
 import { ITelemetryContext } from '@microsoft/applicationinsights-common';
@@ -220,19 +219,13 @@ export declare class ApplicationInsights implements IApplicationInsights {
     trackDependencyData(dependency: IDependencyTelemetry): void;
     /**
      * Attempt to flush data immediately; If executing asynchronously (the default) and
-     * you DO NOT pass a callback function then a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
-     * will be returned which will resolve once the flush is complete. The actual implementation of the `IPromise`
      * will be a native Promise (if supported) or the default as supplied by [ts-async library](https://github.com/nevware21/ts-async)
      * @param async - send data asynchronously when true
      * @param callBack - if specified, notify caller when send is complete, the channel should return true to indicate to the caller that it will be called.
      * If the caller doesn't return true the caller should assume that it may never be called.
-     * @returns - If a callback is provided `true` to indicate that callback will be called after the flush is complete otherwise the caller
-     * should assume that any provided callback will never be called, Nothing or if occurring asynchronously a
-     * [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) which will be resolved once the unload is complete,
-     * the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) will only be returned when no callback is provided
-     * and async is true.
+     * @returns void
      */
-    flush(async?: boolean, callBack?: () => void): void | IPromise<void>;
+    flush(async?: boolean, callBack?: () => void): void;
     /**
      * Manually trigger an immediate send of all telemetry still in the buffer using beacon Sender.
      * Fall back to xhr sender if beacon is not supported.
@@ -268,21 +261,13 @@ export declare class ApplicationInsights implements IApplicationInsights {
      * to be un-initialized and non-operational, re-initializing the SDK should only be attempted if the previous
      * unload call return `true` stating that all plugins reported that they also unloaded, the recommended
      * approach is to create a new instance and initialize that instance.
-     * This is due to possible unexpected side effects caused by plugins not supporting unload / teardown, unable
-     * to successfully remove any global references or they may just be completing the unload process asynchronously.
-     * If you pass isAsync as true and do not provide
-     * If you pass isAsync as `true` (also the default) and DO NOT pass a callback function then an [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
-     * will be returned which will resolve once the unload is complete. The actual implementation of the `IPromise`
-     * will be a native Promise (if supported) or the default as supplied by [ts-async library](https://github.com/nevware21/ts-async)
      * @param isAsync - Can the unload be performed asynchronously (default)
      * @param unloadComplete - An optional callback that will be called once the unload has completed
      * @param cbTimeout - An optional timeout to wait for any flush operations to complete before proceeding with the
      * unload. Defaults to 5 seconds.
-     * @return Nothing or if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
-     * which will be resolved once the unload is complete, the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
-     * will only be returned when no callback is provided and isAsync is true
+     * @return Nothing
      */
-    unload(isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void | IPromise<ITelemetryUnloadState>;
+    unload(isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void;
     getPlugin<T extends IPlugin = IPlugin>(pluginIdentifier: string): ILoadedPlugin<T>;
     /**
      * Add a new plugin to the installation
@@ -372,19 +357,12 @@ export declare interface IApplicationInsights extends IAppInsights, IDependencie
     appInsights: AnalyticsPlugin;
     /**
      * Attempt to flush data immediately; If executing asynchronously (the default) and
-     * you DO NOT pass a callback function then a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
-     * will be returned which will resolve once the flush is complete. The actual implementation of the `IPromise`
-     * will be a native Promise (if supported) or the default as supplied by [ts-async library](https://github.com/nevware21/ts-async)
      * @param async - send data asynchronously when true
      * @param callBack - if specified, notify caller when send is complete, the channel should return true to indicate to the caller that it will be called.
      * If the caller doesn't return true the caller should assume that it may never be called.
-     * @returns - If a callback is provided `true` to indicate that callback will be called after the flush is complete otherwise the caller
-     * should assume that any provided callback will never be called, Nothing or if occurring asynchronously a
-     * [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) which will be resolved once the unload is complete,
-     * the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) will only be returned when no callback is provided
-     * and async is true.
+     * @returns - void
      */
-    flush: (async?: boolean, callBack?: () => void) => void | IPromise<void>;
+    flush: (async?: boolean, callBack?: () => void) => void;
     onunloadFlush: (async?: boolean) => void;
     getSender: () => Sender;
     setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie?: boolean): void;
@@ -394,20 +372,13 @@ export declare interface IApplicationInsights extends IAppInsights, IDependencie
      * to be un-initialized and non-operational, re-initializing the SDK should only be attempted if the previous
      * unload call return `true` stating that all plugins reported that they also unloaded, the recommended
      * approach is to create a new instance and initialize that instance.
-     * This is due to possible unexpected side effects caused by plugins not supporting unload / teardown, unable
-     * to successfully remove any global references or they may just be completing the unload process asynchronously.
-     * If you pass isAsync as `true` (also the default) and DO NOT pass a callback function then an [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
-     * will be returned which will resolve once the unload is complete. The actual implementation of the `IPromise`
-     * will be a native Promise (if supported) or the default as supplied by [ts-async library](https://github.com/nevware21/ts-async)
      * @param isAsync - Can the unload be performed asynchronously (default)
      * @param unloadComplete - An optional callback that will be called once the unload has completed
      * @param cbTimeout - An optional timeout to wait for any flush operations to complete before proceeding with the
      * unload. Defaults to 5 seconds.
-     * @return Nothing or if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
-     * which will be resolved once the unload is complete, the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
-     * will only be returned when no callback is provided and isAsync is true
+     * @return void
      */
-    unload(isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void | IPromise<ITelemetryUnloadState>;
+    unload(isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void;
     /**
      * Find and return the (first) plugin with the specified identifier if present
      * @param pluginIdentifier

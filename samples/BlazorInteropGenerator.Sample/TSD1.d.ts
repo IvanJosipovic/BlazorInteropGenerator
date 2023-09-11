@@ -19,4 +19,16 @@ export interface SomeType {
 
     /** my comment */
     method2(prop: string, prop2: number): string;
+
+    prop7: INewInt;
+}
+
+/** nested
+*/
+export interface INewInt {
+    prop1?: INewInt2;
+}
+
+export interface INewInt2 {
+    prop1?: string;
 }

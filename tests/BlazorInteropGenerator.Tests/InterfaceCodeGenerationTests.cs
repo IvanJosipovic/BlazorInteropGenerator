@@ -423,6 +423,42 @@ public class InterfaceCodeGenerationTests
         prop1.Type.As<NullableTypeSyntax>().ElementType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
     }
 
+    [Fact]
+    public async Task InterfacePropertyDictionary()
+    {
+        var tsd = """
+                export interface SomeType {
+                  prop1: {[key: string]: any;};
+                }
+                """;
+
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
+
+        prop1.Modifiers.Count.Should().Be(1);
+        prop1.Modifiers[0].Value.Should().Be("public");
+
+        prop1.Type.As<GenericNameSyntax>().Identifier.Value.Should().Be("System.Collections.Generic.Dictionary");
+        prop1.Type.As<GenericNameSyntax>().TypeArgumentList.Arguments[0].As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
+        prop1.Type.As<GenericNameSyntax>().TypeArgumentList.Arguments[1].As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("object");
+
+        prop1.Identifier.Text.Should().Be("prop1");
+
+        prop1.AccessorList.Accessors.Count.Should().Be(2);
+        prop1.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
+        prop1.AccessorList.Accessors[1].Kind().Should().Be(SyntaxKind.SetAccessorDeclaration);
+    }
+
     #endregion
 
     #region Method

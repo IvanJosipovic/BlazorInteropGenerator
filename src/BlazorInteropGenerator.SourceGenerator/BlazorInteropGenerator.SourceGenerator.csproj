@@ -29,7 +29,7 @@
 
     <None Include="$(OutputPath)\BlazorInteropGenerator.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
-    <PackageReference Include="TSDParser" Version="1.0.0-alpha.11" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="TSDParser" Version="1.0.0-alpha.12" GeneratePathProperty="true" PrivateAssets="all" />
     <None Include="$(PKGTSDParser)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
     <PackageReference Include="Jering.Javascript.NodeJS" Version="6.3.1" GeneratePathProperty="true" PrivateAssets="all" />

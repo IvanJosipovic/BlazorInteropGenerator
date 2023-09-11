@@ -10,6 +10,8 @@ This project contains code and a Source Generator which can convert a TypeScript
 
 ## How to use the Source Generator
 Create a C# Class Library Project.
+Add the *.tsd files that you want converted, also download all the dependencies.
+File names should be the {PackageName}.d.ts without the Organization.
 Update the .csproj with the following settings.
 
 ```xml

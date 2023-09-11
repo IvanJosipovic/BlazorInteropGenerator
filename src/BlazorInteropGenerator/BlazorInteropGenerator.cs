@@ -33,16 +33,26 @@ public class Generator
         Packages.Add(packageName, tsd);
     }
 
-    private InterfaceDeclaration? GetInterface(string typeScriptDefinitionName, string objectName)
+    private (string, InterfaceDeclaration)? GetInterface(string typeScriptDefinitionName, string objectName)
     {
+        if (!Packages.ContainsKey(typeScriptDefinitionName))
+        {
+            return null;
+        }
+
         var localInterface = Packages[typeScriptDefinitionName].Statements.Where(x => x.Kind == TSSyntaxKind.InterfaceDeclaration).Cast<InterfaceDeclaration>().FirstOrDefault(x => x.Name.EscapedText == objectName);
 
         if (localInterface != null)
         {
-            return localInterface;
+            return (typeScriptDefinitionName, localInterface);
         }
 
         var ext = Packages[typeScriptDefinitionName].Statements.Where(x => x.Kind == TSSyntaxKind.ImportDeclaration).Cast<ImportDeclaration>().FirstOrDefault(x => ((NamedImports)x.ImportClause.NamedBindings).Elements.First().Name.EscapedText == objectName);
+
+        if (ext == null)
+        {
+            return null;
+        }
 
         var packageName = ext.ModuleSpecifier.Text.Contains("/") ? ext.ModuleSpecifier.Text.Substring(ext.ModuleSpecifier.Text.LastIndexOf("/") + 1) : ext.ModuleSpecifier.Text;
 
@@ -51,9 +61,32 @@ public class Generator
         return externalInterface;
     }
 
-    private ClassDeclaration? GetClass(string typeScriptDefinitionName, string objectName)
+    private (string, ClassDeclaration)? GetClass(string typeScriptDefinitionName, string objectName)
     {
-        return Packages[typeScriptDefinitionName].Statements.Where(x => x.Kind == TSSyntaxKind.ClassDeclaration).Cast<ClassDeclaration>().FirstOrDefault(x => x.Name.EscapedText == objectName);
+        if (!Packages.ContainsKey(typeScriptDefinitionName))
+        {
+            return null;
+        }
+
+        var localClass = Packages[typeScriptDefinitionName].Statements.Where(x => x.Kind == TSSyntaxKind.ClassDeclaration).Cast<ClassDeclaration>().FirstOrDefault(x => x.Name.EscapedText == objectName);
+
+        if (localClass != null)
+        {
+            return (typeScriptDefinitionName, localClass);
+        }
+
+        var ext = Packages[typeScriptDefinitionName].Statements.Where(x => x.Kind == TSSyntaxKind.ImportDeclaration).Cast<ImportDeclaration>().FirstOrDefault(x => ((NamedImports)x.ImportClause.NamedBindings).Elements.First().Name.EscapedText == objectName);
+
+        if (ext == null)
+        {
+            return null;
+        }
+
+        var packageName = ext.ModuleSpecifier.Text.Contains("/") ? ext.ModuleSpecifier.Text.Substring(ext.ModuleSpecifier.Text.LastIndexOf("/") + 1) : ext.ModuleSpecifier.Text;
+
+        var externalClass = GetClass(packageName, ((NamedImports)ext.ImportClause.NamedBindings).Elements.First().Name.EscapedText);
+
+        return externalClass;
     }
 
     public CompilationUnitSyntax GenerateObjects(string typeScriptDefinitionName, string objectName, TSSyntaxKind syntaxKind, string @namespace)
@@ -64,17 +97,17 @@ public class Generator
         {
             var interfaceDeclaration = GetInterface(typeScriptDefinitionName, objectName);
 
-            namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateInterfaceDeclaration(typeScriptDefinitionName, interfaceDeclaration));
+            namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateInterfaceDeclaration(interfaceDeclaration.Value.Item1, interfaceDeclaration.Value.Item2));
         }
         else if (syntaxKind == TSSyntaxKind.ClassDeclaration)
         {
             var classDeclaration = GetClass(typeScriptDefinitionName, objectName);
 
-            namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateClassDeclaration(typeScriptDefinitionName, classDeclaration));
+            namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateClassDeclaration(classDeclaration.Value.Item1, classDeclaration.Value.Item2));
         }
         else
         {
-            throw new NotSupportedException();
+            throw new NotSupportedException("Kind not supported " + syntaxKind.ToString());
         }
 
         // Generate missing Interfaces
@@ -82,9 +115,26 @@ public class Generator
         {
             var item = missingObjects.Dequeue();
 
+            if (namespaceDeclaration.Members.Any(x => (x.IsKind(SyntaxKind.InterfaceDeclaration) && ((InterfaceDeclarationSyntax)x).Identifier.Text == item.Item2) || (x.IsKind(SyntaxKind.ClassDeclaration) && ((ClassDeclarationSyntax)x).Identifier.Text == item.Item2)))
+            {
+                continue;
+            }
+
             var @newInterface = GetInterface(item.Item1, item.Item2);
 
-            namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateInterfaceDeclaration(item.Item1, @newInterface));
+            if (newInterface != null)
+            {
+                namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateInterfaceDeclaration(@newInterface.Value.Item1, @newInterface.Value.Item2));
+            }
+            else
+            {
+                var @newClass = GetClass(item.Item1, item.Item2);
+
+                if (@newClass != null)
+                {
+                    namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateClassDeclaration(@newClass.Value.Item1, @newClass.Value.Item2));
+                }
+            }
         }
 
         compilationUnit = compilationUnit.AddMembers(namespaceDeclaration);
@@ -96,13 +146,13 @@ public class Generator
     {
         var @interface = SyntaxFactory.InterfaceDeclaration(interfaceDeclaration.Name.EscapedText);
 
+        @interface = @interface.AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
+        @interface = @interface.AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword));
+
         if (interfaceDeclaration.JSDoc != null)
         {
             @interface = AddComment(@interface, interfaceDeclaration.JSDoc) as InterfaceDeclarationSyntax;
         }
-
-        @interface = @interface.AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
-        @interface = @interface.AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword));
 
         if (interfaceDeclaration.HeritageClauses != null)
         {
@@ -171,7 +221,7 @@ public class Generator
             }
             else
             {
-                throw new NotSupportedException();
+                //throw new NotSupportedException();
             }
         }
 
@@ -248,7 +298,7 @@ public class Generator
             }
             else
             {
-                throw new NotSupportedException();
+                //throw new NotSupportedException("Kind not Supported " + statement.Kind);
             }
         }
 
@@ -310,6 +360,20 @@ public class Generator
             case TSSyntaxKind.ConstructorType:
                 break;
             case TSSyntaxKind.TypeLiteral:
+                var typeLiteral = (TypeLiteral)node;
+
+                if (typeLiteral.Members.Count == 1 && typeLiteral.Members[0] is IndexSignature)
+                {
+                    var indexSignature = typeLiteral.Members[0] as IndexSignature;
+
+                    // Dictionary
+                    return SyntaxFactory.GenericName(SyntaxFactory.Identifier("System.Collections.Generic.Dictionary"), SyntaxFactory.TypeArgumentList(SyntaxFactory.SeparatedList(new List<TypeSyntax>()
+                    {
+                        ConvertType(typeScriptDefinitionName, indexSignature.Parameters[0].Type),
+                        ConvertType(typeScriptDefinitionName, indexSignature.Type)
+                    })));
+                }
+
                 break;
             case TSSyntaxKind.ArrayType:
                 return SyntaxFactory.ParseTypeName(ConvertType(typeScriptDefinitionName, ((ArrayType)node).ElementType) + "[]");
@@ -372,6 +436,6 @@ public class Generator
                 break;
         }
 
-        throw new NotImplementedException("");
+        return SyntaxFactory.ParseTypeName("object");
     }
 }
