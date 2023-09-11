@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -39,7 +40,14 @@ public class SourceGenerator : IIncrementalGenerator
         // generate a class that contains their values as const strings
         initContext.RegisterSourceOutput(combined, (spc, combined) =>
         {
-            var syntax = Generator.GenerateObjects(combined.Right.First(x => x.Name == combined.Left.Name).Content, combined.Left.ObjectName, combined.Left.SyntaxKind.Value, combined.Left.Namespace).GetAwaiter().GetResult();
+            var generator = new Generator();
+
+            foreach (var item in combined.Right)
+            {
+                generator.ParsePackage(RemoveExtension(item.Name), item.Content).Wait();
+            }
+
+            var syntax = generator.GenerateObjects(RemoveExtension(combined.Left.TypeScriptDefenitionName), combined.Left.ObjectName, combined.Left.SyntaxKind.Value, combined.Left.Namespace);
 
             var code = syntax
                 .NormalizeWhitespace()
@@ -49,13 +57,24 @@ public class SourceGenerator : IIncrementalGenerator
         });
     }
 
+    // Remove the ".d.ts" characters from the end
+    static string RemoveExtension(string input)
+    {
+        if (input.EndsWith(".d.ts"))
+        {
+            return input.Substring(0, input.Length - 5);
+        }
+
+        return input;
+    }
+
     static ObjectToGenerate? GetTypeToGenerate(GeneratorAttributeSyntaxContext context, CancellationToken ct)
     {
-        var attr = context.Attributes.Where(x => x.AttributeClass.Name == "BlazorInteropGeneratorAttribute").First();
+        var attr = context.Attributes.Where(x => x.AttributeClass.Name == nameof(BlazorInteropGeneratorAttribute)).First();
 
         var response = new ObjectToGenerate()
         {
-            Name = attr.ConstructorArguments[0].Value.ToString(),
+            TypeScriptDefenitionName = attr.ConstructorArguments[0].Value.ToString(),
             ObjectName = context.TargetSymbol.Name,
             Namespace = context.TargetSymbol.ContainingNamespace.ToString(),
             SyntaxKind = context.TargetNode.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.InterfaceDeclaration) ? SyntaxKind.InterfaceDeclaration : SyntaxKind.ClassDeclaration,
@@ -65,19 +84,19 @@ public class SourceGenerator : IIncrementalGenerator
     }
 }
 
-public class TSD
+internal class TSD
 {
     public string Name { get; set; }
 
     public string Content { get; set; }
 }
 
-public class ObjectToGenerate
+internal class ObjectToGenerate
 {
     /// <summary>
-    /// TSD Name or NPM Project Name
+    /// TS Definition file name
     /// </summary>
-    public string Name { get; set; }
+    public string TypeScriptDefenitionName { get; set; }
 
     /// <summary>
     /// Object to Generate

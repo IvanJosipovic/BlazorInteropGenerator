@@ -35,7 +35,7 @@ public class GeneratorTests : TestsBase
 
         var driver = CSharpGeneratorDriver
             .Create(new IIncrementalGenerator[] { new BlazorInteropGenerator.SourceGenerator.SourceGenerator() })
-            .AddAdditionalTexts(ImmutableArray.CreateRange(new List<AdditionalText>() { new CustomAdditionalText("test.d.ts", tsd) })); ;
+            .AddAdditionalTexts(ImmutableArray.CreateRange(new List<AdditionalText>() { new CustomAdditionalText("test.d.ts", tsd) }));
 
         driver.RunGeneratorsAndUpdateCompilation(compilation, out var updatedCompilation, out var diagnostics);
 
@@ -71,11 +71,11 @@ public class GeneratorTests : TestsBase
 
         var driver = CSharpGeneratorDriver
             .Create(new IIncrementalGenerator[] { new BlazorInteropGenerator.SourceGenerator.SourceGenerator() })
-            .AddAdditionalTexts(ImmutableArray.CreateRange(new List<AdditionalText>() { new CustomAdditionalText("test.d.ts", tsd) })); ;
+            .AddAdditionalTexts(ImmutableArray.CreateRange(new List<AdditionalText>() { new CustomAdditionalText("test.d.ts", tsd) }));
 
         driver.RunGeneratorsAndUpdateCompilation(compilation, out var updatedCompilation, out var diagnostics);
 
-        var @interface = updatedCompilation.SyntaxTrees.Last();
+        var @class = updatedCompilation.SyntaxTrees.Last();
 
         var code = updatedCompilation.SyntaxTrees.Last().ToString();
 

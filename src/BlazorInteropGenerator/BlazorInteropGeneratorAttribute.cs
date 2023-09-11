@@ -10,7 +10,7 @@ public class BlazorInteropGeneratorAttribute : Attribute
     /// <summary>
     /// Generates C# Interfaces from TypeScript Definitions
     /// </summary>
-    /// <param name="name">NPM Package or path to TS Definition</param>
+    /// <param name="name">TS Definition file name</param>
     public BlazorInteropGeneratorAttribute(string name)
     {
         Name = name;

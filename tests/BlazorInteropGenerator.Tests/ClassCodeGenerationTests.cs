@@ -20,7 +20,9 @@ public class ClassCodeGenerationTests
                 }
                 """;
 
-        var syntaxFactory = await Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.ClassDeclaration, "Test");
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.ClassDeclaration, "Test");
 
         var code = syntaxFactory
            .NormalizeWhitespace()
@@ -51,7 +53,9 @@ public class ClassCodeGenerationTests
                 }
                 """;
 
-        var syntaxFactory = await Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.ClassDeclaration, "Test");
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.ClassDeclaration, "Test");
 
         var code = syntaxFactory
            .NormalizeWhitespace()
@@ -76,7 +80,9 @@ public class ClassCodeGenerationTests
                 }
                 """;
 
-        var syntaxFactory = await Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.ClassDeclaration, "Test");
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.ClassDeclaration, "Test");
 
         var code = syntaxFactory
            .NormalizeWhitespace()
@@ -108,7 +114,9 @@ public class ClassCodeGenerationTests
                 }
                 """;
 
-        var syntaxFactory = await Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.ClassDeclaration, "Test");
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.ClassDeclaration, "Test");
 
         var code = syntaxFactory
            .NormalizeWhitespace()

@@ -19,7 +19,9 @@ public class InterfaceCodeGenerationTests
                 }
                 """;
 
-        var syntaxFactory = await Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
 
         var code = syntaxFactory
            .NormalizeWhitespace()
@@ -49,7 +51,137 @@ public class InterfaceCodeGenerationTests
                 }
                 """;
 
-        await Assert.ThrowsAsync<NotSupportedException>(async () => await Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.AnyKeyword, "Test"));
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+
+        Assert.ThrowsAny<NotSupportedException>(() => generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.AnyKeyword, "Test"));
+    }
+
+    [Fact]
+    public async Task InterfaceMulti()
+    {
+        var tsd = """
+                export interface IType {
+                    prop: IType2;
+                }
+
+                export interface IType2 {
+                    prop: string;
+                }
+                """;
+
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "IType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+        @interface.Identifier.Text.Should().Be("IType");
+
+        var @interface2 = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[1] as InterfaceDeclarationSyntax;
+        @interface2.Identifier.Text.Should().Be("IType2");
+    }
+
+    [Fact]
+    public async Task InterfaceMultiDuplicate()
+    {
+        var tsd = """
+                export interface IType {
+                    prop: IType2;
+                    prop2: IType2;
+                }
+
+                export interface IType2 {
+                    prop: string;
+                }
+                """;
+
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "IType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var ns = syntaxFactory.Members[0] as NamespaceDeclarationSyntax;
+
+        ns.Members.Count.Should().Be(2);
+
+        var @interface = ns.Members[0] as InterfaceDeclarationSyntax;
+        @interface.Identifier.Text.Should().Be("IType");
+
+        var @interface2 = ns.Members[1] as InterfaceDeclarationSyntax;
+        @interface2.Identifier.Text.Should().Be("IType2");
+    }
+
+    [Fact]
+    public async Task InterfaceExternal()
+    {
+        var tsd = """
+                import { IType2 } from '@test/tsd2';
+                export declare interface IType {
+                    prop: IType2;
+                }
+                """;
+
+        var tsd2 = """
+                export declare interface IType2 {
+                    prop: string;
+                }
+                """;
+
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        await generator.ParsePackage("tsd2", tsd2);
+        var syntaxFactory = generator.GenerateObjects("tsd", "IType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+        @interface.Identifier.Text.Should().Be("IType");
+
+        var @interface2 = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[1] as InterfaceDeclarationSyntax;
+        @interface2.Identifier.Text.Should().Be("IType2");
+    }
+
+    [Fact]
+    public async Task Extends()
+    {
+        var tsd = """
+                export interface SomeType extends SomeType2 {
+                }
+
+                export interface SomeType2 {
+                }
+                """;
+
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+
+        var ns = syntaxFactory.Members[0] as NamespaceDeclarationSyntax;
+
+        var @interface = ns.Members[0] as InterfaceDeclarationSyntax;
+        @interface.Identifier.Text.Should().Be("SomeType");
+
+
+        var @interface2 = ns.Members[1] as InterfaceDeclarationSyntax;
+        @interface2.Identifier.Text.Should().Be("SomeType2");
     }
 
     #region Property
@@ -64,7 +196,9 @@ public class InterfaceCodeGenerationTests
                 }
                 """;
 
-        var syntaxFactory = await Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
 
         var code = syntaxFactory
            .NormalizeWhitespace()
@@ -89,7 +223,9 @@ public class InterfaceCodeGenerationTests
                 }
                 """;
 
-        var syntaxFactory = await Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
 
         var code = syntaxFactory
            .NormalizeWhitespace()
@@ -121,7 +257,9 @@ public class InterfaceCodeGenerationTests
                 }
                 """;
 
-        var syntaxFactory = await Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
 
         var code = syntaxFactory
            .NormalizeWhitespace()
@@ -154,7 +292,9 @@ public class InterfaceCodeGenerationTests
             }
             """;
 
-        var syntaxFactory = await Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
 
         var code = syntaxFactory
            .NormalizeWhitespace()
@@ -199,7 +339,9 @@ public class InterfaceCodeGenerationTests
                 }
                 """;
 
-        var syntaxFactory = await Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
 
         var code = syntaxFactory
            .NormalizeWhitespace()
@@ -231,7 +373,9 @@ public class InterfaceCodeGenerationTests
                 }
                 """;
 
-        var syntaxFactory = await Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
 
         var code = syntaxFactory
            .NormalizeWhitespace()
@@ -263,7 +407,9 @@ public class InterfaceCodeGenerationTests
                 }
                 """;
 
-        var syntaxFactory = await Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
 
         var code = syntaxFactory
            .NormalizeWhitespace()
@@ -291,7 +437,9 @@ public class InterfaceCodeGenerationTests
                 }
                 """;
 
-        var syntaxFactory = await Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
 
         var code = syntaxFactory
            .NormalizeWhitespace()
@@ -316,7 +464,9 @@ public class InterfaceCodeGenerationTests
                 }
                 """;
 
-        var syntaxFactory = await Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
 
         var code = syntaxFactory
            .NormalizeWhitespace()
@@ -344,7 +494,9 @@ public class InterfaceCodeGenerationTests
                 }
                 """;
 
-        var syntaxFactory = await Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
 
         var code = syntaxFactory
            .NormalizeWhitespace()
@@ -372,7 +524,9 @@ public class InterfaceCodeGenerationTests
                 }
                 """;
 
-        var syntaxFactory = await Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
 
         var code = syntaxFactory
            .NormalizeWhitespace()
@@ -400,7 +554,9 @@ public class InterfaceCodeGenerationTests
                 }
                 """;
 
-        var syntaxFactory = await Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
 
         var code = syntaxFactory
            .NormalizeWhitespace()
@@ -424,7 +580,9 @@ public class InterfaceCodeGenerationTests
                 }
                 """;
 
-        var syntaxFactory = await Generator.GenerateObjects(tsd, "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
 
         var code = syntaxFactory
            .NormalizeWhitespace()
