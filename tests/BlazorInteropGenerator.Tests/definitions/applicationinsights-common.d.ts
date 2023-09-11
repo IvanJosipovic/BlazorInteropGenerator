@@ -1402,14 +1402,14 @@ export declare interface IExceptionTelemetry extends IPartC {
      * @memberof IExceptionTelemetry
      * @description Error Object(s)
      */
-    exception?: Error | IAutoExceptionTelemetry;
+    exception?: IAutoExceptionTelemetry;
     /**
      * @description Specified severity of exception for use with
      * telemetry filtering in dashboard
      * @type {(SeverityLevel | number)}
      * @memberof IExceptionTelemetry
      */
-    severityLevel?: SeverityLevel | number;
+    severityLevel?: SeverityLevel;
 }
 
 export declare interface IInternal {

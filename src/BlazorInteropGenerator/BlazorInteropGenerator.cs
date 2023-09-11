@@ -274,7 +274,7 @@ public class Generator
                 var methodDeclaration = SyntaxFactory.MethodDeclaration(returnType, method.Name.EscapedText)
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
 
-                methodDeclaration = methodDeclaration.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+                //methodDeclaration = methodDeclaration.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
 
                 if (method.JSDoc != null)
                 {
