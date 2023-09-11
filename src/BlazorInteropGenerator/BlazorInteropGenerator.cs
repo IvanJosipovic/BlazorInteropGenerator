@@ -158,10 +158,14 @@ public class Generator
         {
             foreach (var item in interfaceDeclaration.HeritageClauses)
             {
+                var baseTypes = new List<BaseTypeSyntax>();
+
                 foreach (var type in item.Types)
                 {
-                    @interface.AddMembers(SyntaxFactory.IncompleteMember(ConvertType(typeScriptDefinitionName, type)));
+                    baseTypes.Add(SyntaxFactory.SimpleBaseType(ConvertType(typeScriptDefinitionName, type)));
                 }
+
+                @interface = @interface.WithBaseList(SyntaxFactory.BaseList(SyntaxFactory.SeparatedList(baseTypes)));
             }
         }
 
