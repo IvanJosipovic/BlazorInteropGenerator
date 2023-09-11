@@ -1,13 +1,13 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using Microsoft.AspNetCore.Http.Features;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using TSDParser.Class;
 using TSDParser.Enums;
-using TSDParser.Interfaces;
 using SyntaxKind = Microsoft.CodeAnalysis.CSharp.SyntaxKind;
 using TSSyntaxKind = TSDParser.Enums.SyntaxKind;
 
@@ -16,182 +16,371 @@ namespace BlazorInteropGenerator;
 /// <summary>
 /// Generates C# Code from TypeScript Definitions
 /// </summary>
-public static class Generator
+public class Generator
 {
-    public static CompilationUnitSyntax GenerateObjects(string typeScriptDefinition, string objectName, TSSyntaxKind syntaxKind, string @namespace)
+    private Dictionary<string, SourceFile> Packages = new();
+
+    CompilationUnitSyntax compilationUnit = SyntaxFactory.CompilationUnit();
+
+    NamespaceDeclarationSyntax namespaceDeclaration;
+
+    private Queue<(string, string)> missingObjects = new();
+
+    public async Task ParsePackage(string packageName, string packageContent)
     {
-        var syntaxFactory = SyntaxFactory.CompilationUnit();
+        var tsd = await TSDParser.TSDParser.ParseDefinition(packageContent);
 
-        var tsd = TSDParser.TSDParser.ParseDefinition(typeScriptDefinition);
+        Packages.Add(packageName, tsd);
+    }
 
-        var @namespaceObj = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(@namespace)).NormalizeWhitespace();
+    private (string, InterfaceDeclaration)? GetInterface(string typeScriptDefinitionName, string objectName)
+    {
+        if (!Packages.ContainsKey(typeScriptDefinitionName))
+        {
+            return null;
+        }
+
+        var localInterface = Packages[typeScriptDefinitionName].Statements.Where(x => x.Kind == TSSyntaxKind.InterfaceDeclaration).Cast<InterfaceDeclaration>().FirstOrDefault(x => x.Name.EscapedText == objectName);
+
+        if (localInterface != null)
+        {
+            return (typeScriptDefinitionName, localInterface);
+        }
+
+        var ext = Packages[typeScriptDefinitionName].Statements.Where(x => x.Kind == TSSyntaxKind.ImportDeclaration).Cast<ImportDeclaration>().FirstOrDefault(x => ((NamedImports)x.ImportClause.NamedBindings).Elements.First().Name.EscapedText == objectName);
+
+        if (ext == null)
+        {
+            return null;
+        }
+
+        var packageName = ext.ModuleSpecifier.Text.Contains("/") ? ext.ModuleSpecifier.Text.Substring(ext.ModuleSpecifier.Text.LastIndexOf("/") + 1) : ext.ModuleSpecifier.Text;
+
+        var externalInterface = GetInterface(packageName, ((NamedImports)ext.ImportClause.NamedBindings).Elements.First().Name.EscapedText);
+
+        return externalInterface;
+    }
+
+    private (string, ClassDeclaration)? GetClass(string typeScriptDefinitionName, string objectName)
+    {
+        if (!Packages.ContainsKey(typeScriptDefinitionName))
+        {
+            return null;
+        }
+
+        var localClass = Packages[typeScriptDefinitionName].Statements.Where(x => x.Kind == TSSyntaxKind.ClassDeclaration).Cast<ClassDeclaration>().FirstOrDefault(x => x.Name.EscapedText == objectName);
+
+        if (localClass != null)
+        {
+            return (typeScriptDefinitionName, localClass);
+        }
+
+        var ext = Packages[typeScriptDefinitionName].Statements.Where(x => x.Kind == TSSyntaxKind.ImportDeclaration).Cast<ImportDeclaration>().FirstOrDefault(x => ((NamedImports)x.ImportClause.NamedBindings).Elements.First().Name.EscapedText == objectName);
+
+        if (ext == null)
+        {
+            return null;
+        }
+
+        var packageName = ext.ModuleSpecifier.Text.Contains("/") ? ext.ModuleSpecifier.Text.Substring(ext.ModuleSpecifier.Text.LastIndexOf("/") + 1) : ext.ModuleSpecifier.Text;
+
+        var externalClass = GetClass(packageName, ((NamedImports)ext.ImportClause.NamedBindings).Elements.First().Name.EscapedText);
+
+        return externalClass;
+    }
+
+    public CompilationUnitSyntax GenerateObjects(string typeScriptDefinitionName, string objectName, TSSyntaxKind syntaxKind, string @namespace)
+    {
+        namespaceDeclaration = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(@namespace)).NormalizeWhitespace();
 
         if (syntaxKind == TSSyntaxKind.InterfaceDeclaration)
         {
-            var interfaceDeclaration = tsd.Statements.Where(x => x.Kind == syntaxKind).Cast<InterfaceDeclaration>().First(x => x.Name.Text == objectName);
+            var interfaceDeclaration = GetInterface(typeScriptDefinitionName, objectName);
 
-            namespaceObj = namespaceObj.AddMembers(GenerateInterfaceDeclaration(syntaxFactory, interfaceDeclaration).Members.ToArray());
+            namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateInterfaceDeclaration(interfaceDeclaration.Value.Item1, interfaceDeclaration.Value.Item2));
         }
         else if (syntaxKind == TSSyntaxKind.ClassDeclaration)
         {
-            var classDeclaration = tsd.Statements.Where(x => x.Kind == syntaxKind).Cast<ClassDeclaration>().First(x => x.Name.Text == objectName);
+            var classDeclaration = GetClass(typeScriptDefinitionName, objectName);
+
+            namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateClassDeclaration(classDeclaration.Value.Item1, classDeclaration.Value.Item2));
         }
         else
         {
-            throw new NotSupportedException();
+            throw new NotSupportedException("Kind not supported " + syntaxKind.ToString());
         }
 
-        syntaxFactory = syntaxFactory.AddMembers(namespaceObj);
+        // Generate missing Interfaces
+        while (missingObjects.Count > 0)
+        {
+            var item = missingObjects.Dequeue();
 
-        return syntaxFactory;
+            if (namespaceDeclaration.Members.Any(x => (x.IsKind(SyntaxKind.InterfaceDeclaration) && ((InterfaceDeclarationSyntax)x).Identifier.Text == item.Item2) || (x.IsKind(SyntaxKind.ClassDeclaration) && ((ClassDeclarationSyntax)x).Identifier.Text == item.Item2)))
+            {
+                continue;
+            }
+
+            var @newInterface = GetInterface(item.Item1, item.Item2);
+
+            if (newInterface != null)
+            {
+                namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateInterfaceDeclaration(@newInterface.Value.Item1, @newInterface.Value.Item2));
+            }
+            else
+            {
+                var @newClass = GetClass(item.Item1, item.Item2);
+
+                if (@newClass != null)
+                {
+                    namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateClassDeclaration(@newClass.Value.Item1, @newClass.Value.Item2));
+                }
+            }
+        }
+
+        compilationUnit = compilationUnit.AddMembers(namespaceDeclaration);
+
+        return compilationUnit;
     }
 
-    public static CompilationUnitSyntax GenerateInterfaceDeclaration(CompilationUnitSyntax syntaxFactory, InterfaceDeclaration interfaceDeclaration)
+    private MemberDeclarationSyntax GenerateInterfaceDeclaration(string typeScriptDefinitionName, InterfaceDeclaration interfaceDeclaration)
     {
-        var @interface = SyntaxFactory.InterfaceDeclaration(interfaceDeclaration.Name.Text);
+        var @interface = SyntaxFactory.InterfaceDeclaration(interfaceDeclaration.Name.EscapedText);
 
         @interface = @interface.AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
         @interface = @interface.AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword));
 
         if (interfaceDeclaration.JSDoc != null)
         {
-            @interface = AddComment(@interface, interfaceDeclaration.JSDoc.Comment) as InterfaceDeclarationSyntax;
+            @interface = AddComment(@interface, interfaceDeclaration.JSDoc) as InterfaceDeclarationSyntax;
         }
 
-        foreach (var statement in interfaceDeclaration.Statements)
+        if (interfaceDeclaration.HeritageClauses != null)
+        {
+            foreach (var item in interfaceDeclaration.HeritageClauses)
+            {
+                var baseTypes = new List<BaseTypeSyntax>();
+
+                foreach (var type in item.Types)
+                {
+                    baseTypes.Add(SyntaxFactory.SimpleBaseType(ConvertType(typeScriptDefinitionName, type)));
+                }
+
+                @interface = @interface.WithBaseList(SyntaxFactory.BaseList(SyntaxFactory.SeparatedList(baseTypes)));
+            }
+        }
+
+        foreach (var statement in interfaceDeclaration.Members)
         {
             if (statement.Kind == TSSyntaxKind.PropertySignature)
             {
-                var propertySignature = statement as PropertySignature;
+                var property = statement as PropertySignature;
 
-                TypeSyntax type = propertySignature.QuestionToken == null ? ConvertType(propertySignature.Type) : SyntaxFactory.NullableType(ConvertType(propertySignature.Type));
+                var type = property.QuestionToken == null ? ConvertType(typeScriptDefinitionName, property.Type) : SyntaxFactory.NullableType(ConvertType(typeScriptDefinitionName, property.Type));
 
-                var propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, propertySignature.Name.Text)
+                var propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, property.Name.EscapedText)
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                     .AddAccessorListAccessors(
                         SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
                         SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
 
-                if (propertySignature.JSDoc != null)
+                if (property.JSDoc != null)
                 {
-                    propertyDeclaration = AddComment(propertyDeclaration, propertySignature.JSDoc.Comment) as PropertyDeclarationSyntax;
+                    propertyDeclaration = AddComment(propertyDeclaration, property.JSDoc) as PropertyDeclarationSyntax;
                 }
 
                 @interface = @interface.AddMembers(propertyDeclaration);
             }
             else if (statement.Kind == TSSyntaxKind.MethodSignature)
             {
-                var methodSignature = statement as MethodSignature;
+                var method = statement as MethodSignature;
 
-                var methodDeclaration = SyntaxFactory.MethodDeclaration(ConvertType(methodSignature.Type), methodSignature.Name.Text)
+                var returnType = method.QuestionToken == null ? ConvertType(typeScriptDefinitionName, method.Type) : SyntaxFactory.NullableType(ConvertType(typeScriptDefinitionName, method.Type));
+
+                var methodDeclaration = SyntaxFactory.MethodDeclaration(returnType, method.Name.EscapedText)
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
 
                 methodDeclaration = methodDeclaration.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
 
-                if (methodSignature.JSDoc != null)
+                if (method.JSDoc != null)
                 {
-                    methodDeclaration = AddComment(methodDeclaration, methodSignature.JSDoc.Comment) as MethodDeclarationSyntax;
+                    methodDeclaration = AddComment(methodDeclaration, method.JSDoc) as MethodDeclarationSyntax;
+                }
+
+                if (method.Parameters?.Any() == true)
+                {
+                    var parameters = new List<ParameterSyntax>();
+
+                    foreach (var item in method.Parameters)
+                    {
+                        var type = item.QuestionToken == null ? ConvertType(typeScriptDefinitionName, item.Type) : SyntaxFactory.NullableType(ConvertType(typeScriptDefinitionName, item.Type));
+
+                        var param = SyntaxFactory.Parameter(SyntaxFactory.Identifier(item.Name.EscapedText)).WithType(type);
+                        parameters.Add(param);
+                    }
+
+                    methodDeclaration = methodDeclaration.WithParameterList(SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(parameters)));
                 }
 
                 @interface = @interface.AddMembers(methodDeclaration);
             }
             else
             {
-                throw new NotSupportedException();
+                //throw new NotSupportedException();
             }
         }
 
-        syntaxFactory = syntaxFactory.AddMembers(@interface);
-
-        return syntaxFactory;
+        return @interface;
     }
 
-    public static SyntaxNode AddComment(SyntaxNode node, string comment)
+    private MemberDeclarationSyntax GenerateClassDeclaration(string typeScriptDefinitionName, ClassDeclaration classDeclaration)
+    {
+        var @class = SyntaxFactory.ClassDeclaration(classDeclaration.Name.EscapedText);
+
+        @class = @class.AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
+        @class = @class.AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword));
+
+        if (classDeclaration.JSDoc != null)
+        {
+            @class = AddComment(@class, classDeclaration.JSDoc) as ClassDeclarationSyntax;
+        }
+
+        foreach (var statement in classDeclaration.Members)
+        {
+            if (statement.Kind == TSSyntaxKind.PropertyDeclaration)
+            {
+                var property = statement as PropertyDeclaration;
+
+                var type = property.QuestionToken == null ? ConvertType(typeScriptDefinitionName, property.Type) : SyntaxFactory.NullableType(ConvertType(typeScriptDefinitionName, property.Type));
+
+                var propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, property.Name.EscapedText)
+                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+                    .AddAccessorListAccessors(
+                        SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
+                        SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
+
+                if (property.JSDoc != null)
+                {
+                    propertyDeclaration = AddComment(propertyDeclaration, property.JSDoc) as PropertyDeclarationSyntax;
+                }
+
+                @class = @class.AddMembers(propertyDeclaration);
+            }
+            else if (statement.Kind == TSSyntaxKind.MethodDeclaration)
+            {
+                var method = statement as MethodDeclaration;
+
+                var returnType = method.QuestionToken == null ? ConvertType(typeScriptDefinitionName, method.Type) : SyntaxFactory.NullableType(ConvertType(typeScriptDefinitionName, method.Type));
+
+                var methodDeclaration = SyntaxFactory.MethodDeclaration(returnType, method.Name.EscapedText)
+                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
+
+                //methodDeclaration = methodDeclaration.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+
+                if (method.JSDoc != null)
+                {
+                    methodDeclaration = AddComment(methodDeclaration, method.JSDoc) as MethodDeclarationSyntax;
+                }
+
+                if (method.Parameters?.Any() == true)
+                {
+                    var parameters = new List<ParameterSyntax>();
+
+                    foreach (var item in method.Parameters)
+                    {
+                        var type = item.QuestionToken == null ? ConvertType(typeScriptDefinitionName, item.Type) : SyntaxFactory.NullableType(ConvertType(typeScriptDefinitionName, item.Type));
+
+                        var param = SyntaxFactory.Parameter(SyntaxFactory.Identifier(item.Name.EscapedText)).WithType(type);
+                        parameters.Add(param);
+                    }
+
+                    methodDeclaration = methodDeclaration.WithParameterList(SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(parameters)));
+                }
+
+                methodDeclaration = methodDeclaration.WithBody(SyntaxFactory.Block(SyntaxFactory.ParseStatement("throw new NotImplementedException();")));
+
+                @class = @class.AddMembers(methodDeclaration);
+            }
+            else
+            {
+                //throw new NotSupportedException("Kind not Supported " + statement.Kind);
+            }
+        }
+
+        return @class;
+    }
+
+    private SyntaxNode AddComment(SyntaxNode node, List<JSDoc> jsDocs)
     {
         var comments = new List<SyntaxTrivia>();
         comments.Add(SyntaxFactory.Comment("/// <summary>"));
-        comments.AddRange(comment.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries).Select(x => SyntaxFactory.Comment("/// " + x)));
+        comments.AddRange(jsDocs.Where(x => x.Comment is not null)
+                        .SelectMany(x => x.Comment.Where(y => y is JSDocText))
+                        .SelectMany(x => ((JSDocText)x).Text.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(x => SyntaxFactory.Comment("/// " + x))));
         comments.Add(SyntaxFactory.Comment("/// </summary>"));
 
         return node.WithLeadingTrivia(new SyntaxTriviaList(comments));
     }
 
-    private static TypeSyntax ConvertType(Node node)
+    private TypeSyntax ConvertType(string typeScriptDefinitionName, Node node)
     {
         switch (node.Kind)
         {
-            case TSSyntaxKind.FirstLiteralToken:
-                break;
-            case TSSyntaxKind.StringLiteral:
-                break;
-            case TSSyntaxKind.QuestionToken:
-                break;
-            case TSSyntaxKind.Identifier:
-                break;
-            case TSSyntaxKind.ConstKeyword:
-                break;
-            case TSSyntaxKind.ExportKeyword:
-                break;
             case TSSyntaxKind.NullKeyword:
                 return SyntaxFactory.ParseTypeName("null");
             case TSSyntaxKind.VoidKeyword:
                 return SyntaxFactory.ParseTypeName("void");
-            case TSSyntaxKind.PrivateKeyword:
-                break;
-            case TSSyntaxKind.ProtectedKeyword:
-                break;
-            case TSSyntaxKind.StaticKeyword:
-                break;
-            case TSSyntaxKind.FirstContextualKeyword:
-                break;
             case TSSyntaxKind.AnyKeyword:
                 return SyntaxFactory.ParseTypeName("object");
             case TSSyntaxKind.BooleanKeyword:
                 return SyntaxFactory.ParseTypeName("bool");
-            case TSSyntaxKind.DeclareKeyword:
-                break;
-            case TSSyntaxKind.TypeOperator:
-                break;
-            case TSSyntaxKind.ReadonlyKeyword:
-                break;
             case TSSyntaxKind.NumberKeyword:
                 return SyntaxFactory.ParseTypeName("double");
             case TSSyntaxKind.StringKeyword:
                 return SyntaxFactory.ParseTypeName("string");
-            case TSSyntaxKind.UndefinedKeyword:
-                break;
-            case TSSyntaxKind.TypeParameter:
-                break;
-            case TSSyntaxKind.Parameter:
-                break;
-            case TSSyntaxKind.PropertySignature:
-                break;
-            case TSSyntaxKind.PropertyDeclaration:
-                break;
-            case TSSyntaxKind.MethodSignature:
-                break;
-            case TSSyntaxKind.MethodDeclaration:
-                break;
-            case TSSyntaxKind.Constructor:
-                break;
-            case TSSyntaxKind.IndexSignature:
-                break;
             case TSSyntaxKind.TypeReference:
                 // Handle Types
                 var typeReference = (TypeReference)node;
-                if (typeReference.TypeName.Text == "Array")
+                if (typeReference.TypeName.EscapedText == "Array")
                 {
-                    return SyntaxFactory.ParseTypeName(ConvertType(typeReference.TypeArguments[0]) + "[]");
+                    return SyntaxFactory.ParseTypeName(ConvertType(typeScriptDefinitionName, typeReference.TypeArguments[0]) + "[]");
                 }
-                break;
+                else if (typeReference.TypeName.EscapedText == "Date")
+                {
+                    return SyntaxFactory.ParseTypeName("DateTime");
+                }
+                else
+                {
+                    // Not a known type
+                    if (!missingObjects.Contains((typeScriptDefinitionName, typeReference.TypeName.EscapedText)))
+                    {
+                        missingObjects.Enqueue((typeScriptDefinitionName, typeReference.TypeName.EscapedText));
+                    }
+
+                    return SyntaxFactory.ParseTypeName(typeReference.TypeName.EscapedText);
+                }
             case TSSyntaxKind.FunctionType:
                 break;
             case TSSyntaxKind.ConstructorType:
                 break;
             case TSSyntaxKind.TypeLiteral:
+                var typeLiteral = (TypeLiteral)node;
+
+                if (typeLiteral.Members.Count == 1 && typeLiteral.Members[0] is IndexSignature)
+                {
+                    var indexSignature = typeLiteral.Members[0] as IndexSignature;
+
+                    // Dictionary
+                    return SyntaxFactory.GenericName(SyntaxFactory.Identifier("System.Collections.Generic.Dictionary"), SyntaxFactory.TypeArgumentList(SyntaxFactory.SeparatedList(new List<TypeSyntax>()
+                    {
+                        ConvertType(typeScriptDefinitionName, indexSignature.Parameters[0].Type),
+                        ConvertType(typeScriptDefinitionName, indexSignature.Type)
+                    })));
+                }
+
                 break;
             case TSSyntaxKind.ArrayType:
-                return SyntaxFactory.ParseTypeName(ConvertType(((ArrayType)node).ElementType) + "[]");
+                return SyntaxFactory.ParseTypeName(ConvertType(typeScriptDefinitionName, ((ArrayType)node).ElementType) + "[]");
             case TSSyntaxKind.TupleType:
                 break;
             case TSSyntaxKind.UnionType:
@@ -203,6 +392,15 @@ public static class Generator
             case TSSyntaxKind.MappedType:
                 break;
             case TSSyntaxKind.ExpressionWithTypeArguments:
+                var expressionWithTypeArguments = (ExpressionWithTypeArguments)node;
+
+                // Not a known type
+                if (!missingObjects.Contains((typeScriptDefinitionName, expressionWithTypeArguments.Expression.EscapedText)))
+                {
+                    missingObjects.Enqueue((typeScriptDefinitionName, expressionWithTypeArguments.Expression.EscapedText));
+                }
+
+                return SyntaxFactory.ParseTypeName(expressionWithTypeArguments.Expression.EscapedText);
                 break;
             case TSSyntaxKind.FirstStatement:
                 break;
@@ -238,14 +436,10 @@ public static class Generator
                 break;
             case TSSyntaxKind.EnumMember:
                 break;
-            case TSSyntaxKind.SourceFile:
-                break;
-            case TSSyntaxKind.JSDocComment:
-                break;
             default:
                 break;
         }
 
-        throw new NotImplementedException("");
+        return SyntaxFactory.ParseTypeName("object");
     }
 }

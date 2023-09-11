@@ -6,10 +6,13 @@
 
 ## What is this?
 
-This project contains code and a Source Generator which can convert a TypeScript Defenition to a C# Interface.
+This project contains code and a Source Generator which can convert a TypeScript Definition to C# Interfaces.
 
 ## How to use the Source Generator
+
 Create a C# Class Library Project.
+Add the *.d.ts files that you want converted, also download all the dependencies.
+File names should be the {PackageName}.d.ts without the Organization/.
 Update the .csproj with the following settings.
 
 ```xml
@@ -30,9 +33,11 @@ Update the .csproj with the following settings.
 </Project>
 ```
 
-Create a Class file with this format, in this case, the TypeScript Definition must contain an interface called "InterfaceName"
+Create a .cs file with this format, in this case, the TypeScript Definition must contain an interface called "InterfaceName"
 The Source Generator will generate the interface and all its dependencies.
+
 ```c#
+
 using BlazorInteropGenerator;
 
 namespace BlazorInteropGenerator.Sample;
@@ -42,5 +47,4 @@ public partial interface InterfaceName
 {
 
 }
-
 ```

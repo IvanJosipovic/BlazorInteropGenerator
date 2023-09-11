@@ -7,7 +7,7 @@
     <PackageId>BlazorInteropGenerator</PackageId>
     <Authors>Ivan Josipovic</Authors>
     <Description>Converts TypeScript Definition to C# Interfaces</Description>
-    <PackageTags>TypeScript Defenition Interface Generator</PackageTags>
+    <PackageTags>TypeScript Definition Interface Generator</PackageTags>
     <RepositoryUrl>https://github.com/IvanJosipovic/BlazorInteropGenerator</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.7.0" />
-    <PackageReference Include="TSDParser" Version="1.0.0-alpha.7" />
+    <PackageReference Include="TSDParser" Version="1.0.0-alpha.12" />
   </ItemGroup>
 
   <ItemGroup>
