@@ -98,7 +98,7 @@ public class ClassCodeGenerationTests
 
         prop1.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
 
-        prop1.Identifier.Text.Should().Be("prop1");
+        prop1.Identifier.Text.Should().Be("Prop1");
 
         prop1.AccessorList.Accessors.Count.Should().Be(2);
         prop1.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
@@ -132,6 +132,6 @@ public class ClassCodeGenerationTests
 
         method.ReturnType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("void");
 
-        method.Identifier.Text.Should().Be("method");
+        method.Identifier.Text.Should().Be("Method");
     }
 }

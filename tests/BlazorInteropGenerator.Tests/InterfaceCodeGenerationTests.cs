@@ -236,12 +236,9 @@ public class InterfaceCodeGenerationTests
 
         var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
 
-        prop1.Modifiers.Count.Should().Be(1);
-        prop1.Modifiers[0].Value.Should().Be("public");
-
         prop1.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
 
-        prop1.Identifier.Text.Should().Be("prop1");
+        prop1.Identifier.Text.Should().Be("Prop1");
 
         prop1.AccessorList.Accessors.Count.Should().Be(2);
         prop1.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
@@ -270,12 +267,9 @@ public class InterfaceCodeGenerationTests
 
         var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
 
-        prop1.Modifiers.Count.Should().Be(1);
-        prop1.Modifiers[0].Value.Should().Be("public");
-
         prop1.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("double");
 
-        prop1.Identifier.Text.Should().Be("prop1");
+        prop1.Identifier.Text.Should().Be("Prop1");
 
         prop1.AccessorList.Accessors.Count.Should().Be(2);
         prop1.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
@@ -305,12 +299,9 @@ public class InterfaceCodeGenerationTests
 
         var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
 
-        prop1.Modifiers.Count.Should().Be(1);
-        prop1.Modifiers[0].Value.Should().Be("public");
-
         (prop1.Type.As<ArrayTypeSyntax>().ElementType as PredefinedTypeSyntax).Keyword.Value.Should().Be("double");
 
-        prop1.Identifier.Text.Should().Be("prop1");
+        prop1.Identifier.Text.Should().Be("Prop1");
 
         prop1.AccessorList.Accessors.Count.Should().Be(2);
         prop1.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
@@ -318,12 +309,9 @@ public class InterfaceCodeGenerationTests
 
         var prop2 = @interface.Members[1] as PropertyDeclarationSyntax;
 
-        prop2.Modifiers.Count.Should().Be(1);
-        prop2.Modifiers[0].Value.Should().Be("public");
-
         (prop2.Type.As<ArrayTypeSyntax>().ElementType as PredefinedTypeSyntax).Keyword.Value.Should().Be("double");
 
-        prop2.Identifier.Text.Should().Be("prop2");
+        prop2.Identifier.Text.Should().Be("Prop2");
 
         prop2.AccessorList.Accessors.Count.Should().Be(2);
         prop2.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
@@ -352,12 +340,9 @@ public class InterfaceCodeGenerationTests
 
         var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
 
-        prop1.Modifiers.Count.Should().Be(1);
-        prop1.Modifiers[0].Value.Should().Be("public");
-
         prop1.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("object");
 
-        prop1.Identifier.Text.Should().Be("prop1");
+        prop1.Identifier.Text.Should().Be("Prop1");
 
         prop1.AccessorList.Accessors.Count.Should().Be(2);
         prop1.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
@@ -386,12 +371,9 @@ public class InterfaceCodeGenerationTests
 
         var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
 
-        prop1.Modifiers.Count.Should().Be(1);
-        prop1.Modifiers[0].Value.Should().Be("public");
-
         prop1.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("bool");
 
-        prop1.Identifier.Text.Should().Be("prop1");
+        prop1.Identifier.Text.Should().Be("Prop1");
 
         prop1.AccessorList.Accessors.Count.Should().Be(2);
         prop1.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
@@ -445,14 +427,11 @@ public class InterfaceCodeGenerationTests
 
         var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
 
-        prop1.Modifiers.Count.Should().Be(1);
-        prop1.Modifiers[0].Value.Should().Be("public");
-
         prop1.Type.As<GenericNameSyntax>().Identifier.Value.Should().Be("System.Collections.Generic.Dictionary");
         prop1.Type.As<GenericNameSyntax>().TypeArgumentList.Arguments[0].As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
         prop1.Type.As<GenericNameSyntax>().TypeArgumentList.Arguments[1].As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("object");
 
-        prop1.Identifier.Text.Should().Be("prop1");
+        prop1.Identifier.Text.Should().Be("Prop1");
 
         prop1.AccessorList.Accessors.Count.Should().Be(2);
         prop1.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
@@ -513,12 +492,9 @@ public class InterfaceCodeGenerationTests
 
         var method = @interface.Members[0] as MethodDeclarationSyntax;
 
-        method.Modifiers.Count.Should().Be(1);
-        method.Modifiers[0].Value.Should().Be("public");
-
         method.ReturnType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("void");
 
-        method.Identifier.Text.Should().Be("method");
+        method.Identifier.Text.Should().Be("Method");
     }
 
     [Fact]
@@ -543,12 +519,9 @@ public class InterfaceCodeGenerationTests
 
         var method = @interface.Members[0] as MethodDeclarationSyntax;
 
-        method.Modifiers.Count.Should().Be(1);
-        method.Modifiers[0].Value.Should().Be("public");
-
         method.ReturnType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
 
-        method.Identifier.Text.Should().Be("method");
+        method.Identifier.Text.Should().Be("Method");
     }
 
     [Fact]
@@ -573,12 +546,9 @@ public class InterfaceCodeGenerationTests
 
         var method = @interface.Members[0] as MethodDeclarationSyntax;
 
-        method.Modifiers.Count.Should().Be(1);
-        method.Modifiers[0].Value.Should().Be("public");
-
         method.ReturnType.As<NullableTypeSyntax>().ElementType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
 
-        method.Identifier.Text.Should().Be("method");
+        method.Identifier.Text.Should().Be("Method");
     }
 
     [Fact]
