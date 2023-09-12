@@ -215,7 +215,7 @@ public class InterfaceCodeGenerationTests
     }
 
     [Fact]
-    public async Task InterfacePropertyString()
+    public async Task InterfaceProperty()
     {
         var tsd = """
                 export interface SomeType {
@@ -235,143 +235,6 @@ public class InterfaceCodeGenerationTests
         var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
 
         var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
-
-        prop1.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
-
-        prop1.Identifier.Text.Should().Be("Prop1");
-
-        prop1.AccessorList.Accessors.Count.Should().Be(2);
-        prop1.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
-        prop1.AccessorList.Accessors[1].Kind().Should().Be(SyntaxKind.SetAccessorDeclaration);
-    }
-
-    [Fact]
-    public async Task InterfacePropertyNumber()
-    {
-        var tsd = """
-                export interface SomeType {
-                  prop1: number;
-                }
-                """;
-
-        var generator = new Generator();
-        await generator.ParsePackage("tsd", tsd);
-        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
-
-        var code = syntaxFactory
-           .NormalizeWhitespace()
-           .ToFullString();
-
-        syntaxFactory.Members.Count.Should().Be(1);
-        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
-
-        var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
-
-        prop1.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("double");
-
-        prop1.Identifier.Text.Should().Be("Prop1");
-
-        prop1.AccessorList.Accessors.Count.Should().Be(2);
-        prop1.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
-        prop1.AccessorList.Accessors[1].Kind().Should().Be(SyntaxKind.SetAccessorDeclaration);
-    }
-
-    [Fact]
-    public async Task InterfacePropertyArray()
-    {
-        var tsd = """
-            export interface SomeType {
-                prop1: number[];
-                prop2: Array<number>;
-            }
-            """;
-
-        var generator = new Generator();
-        await generator.ParsePackage("tsd", tsd);
-        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
-
-        var code = syntaxFactory
-           .NormalizeWhitespace()
-           .ToFullString();
-
-        syntaxFactory.Members.Count.Should().Be(1);
-        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
-
-        var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
-
-        (prop1.Type.As<ArrayTypeSyntax>().ElementType as PredefinedTypeSyntax).Keyword.Value.Should().Be("double");
-
-        prop1.Identifier.Text.Should().Be("Prop1");
-
-        prop1.AccessorList.Accessors.Count.Should().Be(2);
-        prop1.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
-        prop1.AccessorList.Accessors[1].Kind().Should().Be(SyntaxKind.SetAccessorDeclaration);
-
-        var prop2 = @interface.Members[1] as PropertyDeclarationSyntax;
-
-        (prop2.Type.As<ArrayTypeSyntax>().ElementType as PredefinedTypeSyntax).Keyword.Value.Should().Be("double");
-
-        prop2.Identifier.Text.Should().Be("Prop2");
-
-        prop2.AccessorList.Accessors.Count.Should().Be(2);
-        prop2.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
-        prop2.AccessorList.Accessors[1].Kind().Should().Be(SyntaxKind.SetAccessorDeclaration);
-    }
-
-    [Fact]
-    public async Task InterfacePropertyAny()
-    {
-        var tsd = """
-                export interface SomeType {
-                  prop1: any;
-                }
-                """;
-
-        var generator = new Generator();
-        await generator.ParsePackage("tsd", tsd);
-        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
-
-        var code = syntaxFactory
-           .NormalizeWhitespace()
-           .ToFullString();
-
-        syntaxFactory.Members.Count.Should().Be(1);
-        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
-
-        var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
-
-        prop1.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("object");
-
-        prop1.Identifier.Text.Should().Be("Prop1");
-
-        prop1.AccessorList.Accessors.Count.Should().Be(2);
-        prop1.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
-        prop1.AccessorList.Accessors[1].Kind().Should().Be(SyntaxKind.SetAccessorDeclaration);
-    }
-
-    [Fact]
-    public async Task InterfacePropertyBoolean()
-    {
-        var tsd = """
-                export interface SomeType {
-                  prop1: boolean;
-                }
-                """;
-
-        var generator = new Generator();
-        await generator.ParsePackage("tsd", tsd);
-        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
-
-        var code = syntaxFactory
-           .NormalizeWhitespace()
-           .ToFullString();
-
-        syntaxFactory.Members.Count.Should().Be(1);
-        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
-
-        var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
-
-        prop1.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("bool");
 
         prop1.Identifier.Text.Should().Be("Prop1");
 
@@ -406,6 +269,136 @@ public class InterfaceCodeGenerationTests
     }
 
     [Fact]
+    public async Task InterfacePropertyString()
+    {
+        var tsd = """
+                export interface SomeType {
+                  prop1: string;
+                }
+                """;
+
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
+
+        prop1.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
+    }
+
+    [Fact]
+    public async Task InterfacePropertyNumber()
+    {
+        var tsd = """
+                export interface SomeType {
+                  prop1: number;
+                }
+                """;
+
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
+
+        prop1.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("double");
+    }
+
+    [Fact]
+    public async Task InterfacePropertyArray()
+    {
+        var tsd = """
+            export interface SomeType {
+                prop1: number[];
+                prop2: Array<number>;
+            }
+            """;
+
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
+
+        (prop1.Type.As<ArrayTypeSyntax>().ElementType as PredefinedTypeSyntax).Keyword.Value.Should().Be("double");
+
+        var prop2 = @interface.Members[1] as PropertyDeclarationSyntax;
+
+        (prop2.Type.As<ArrayTypeSyntax>().ElementType as PredefinedTypeSyntax).Keyword.Value.Should().Be("double");
+    }
+
+    [Fact]
+    public async Task InterfacePropertyAny()
+    {
+        var tsd = """
+                export interface SomeType {
+                  prop1: any;
+                }
+                """;
+
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
+
+        prop1.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("object");
+    }
+
+    [Fact]
+    public async Task InterfacePropertyBoolean()
+    {
+        var tsd = """
+                export interface SomeType {
+                  prop1: boolean;
+                }
+                """;
+
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
+
+        prop1.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("bool");
+    }
+
+    [Fact]
     public async Task InterfacePropertyDictionary()
     {
         var tsd = """
@@ -430,12 +423,6 @@ public class InterfaceCodeGenerationTests
         prop1.Type.As<GenericNameSyntax>().Identifier.Value.Should().Be("System.Collections.Generic.Dictionary");
         prop1.Type.As<GenericNameSyntax>().TypeArgumentList.Arguments[0].As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
         prop1.Type.As<GenericNameSyntax>().TypeArgumentList.Arguments[1].As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("object");
-
-        prop1.Identifier.Text.Should().Be("Prop1");
-
-        prop1.AccessorList.Accessors.Count.Should().Be(2);
-        prop1.AccessorList.Accessors[0].Kind().Should().Be(SyntaxKind.GetAccessorDeclaration);
-        prop1.AccessorList.Accessors[1].Kind().Should().Be(SyntaxKind.SetAccessorDeclaration);
     }
 
     #endregion
@@ -447,7 +434,7 @@ public class InterfaceCodeGenerationTests
     {
         var tsd = """
                 export interface SomeType {
-                  /* the comment */
+                  /** the comment */
                   method(): void;
                 }
                 """;
@@ -465,9 +452,35 @@ public class InterfaceCodeGenerationTests
 
         var method = @interface.Members[0] as MethodDeclarationSyntax;
 
-        //method.GetLeadingTrivia()[0].ToString().Should().Be("/// <summary>");
-        //method.GetLeadingTrivia()[1].ToString().Should().Be("/// the comment");
-        //method.GetLeadingTrivia()[2].ToString().Should().Be("/// </summary>");
+        method.GetLeadingTrivia()[0].ToString().Should().Be("/// <summary>");
+        method.GetLeadingTrivia()[1].ToString().Should().Be("/// the comment");
+        method.GetLeadingTrivia()[2].ToString().Should().Be("/// </summary>");
+    }
+
+
+    [Fact]
+    public async Task InterfaceMethod()
+    {
+        var tsd = """
+                export interface SomeType {
+                  method(): void;
+                }
+                """;
+
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var method = @interface.Members[0] as MethodDeclarationSyntax;
+
+        method.Identifier.Text.Should().Be("Method");
     }
 
     [Fact]
@@ -493,8 +506,6 @@ public class InterfaceCodeGenerationTests
         var method = @interface.Members[0] as MethodDeclarationSyntax;
 
         method.ReturnType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("void");
-
-        method.Identifier.Text.Should().Be("Method");
     }
 
     [Fact]
@@ -520,8 +531,6 @@ public class InterfaceCodeGenerationTests
         var method = @interface.Members[0] as MethodDeclarationSyntax;
 
         method.ReturnType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
-
-        method.Identifier.Text.Should().Be("Method");
     }
 
     [Fact]
@@ -547,8 +556,6 @@ public class InterfaceCodeGenerationTests
         var method = @interface.Members[0] as MethodDeclarationSyntax;
 
         method.ReturnType.As<NullableTypeSyntax>().ElementType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
-
-        method.Identifier.Text.Should().Be("Method");
     }
 
     [Fact]
