@@ -191,7 +191,7 @@ public class InterfaceCodeGenerationTests
     {
         var tsd = """
                 export interface SomeType {
-                  /* the comment */
+                  /** the comment */
                   prop1: string;
                 }
                 """;
@@ -209,9 +209,9 @@ public class InterfaceCodeGenerationTests
 
         var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
 
-        //prop1.GetLeadingTrivia()[0].ToString().Should().Be("/// <summary>");
-        //prop1.GetLeadingTrivia()[1].ToString().Should().Be("/// the comment");
-        //prop1.GetLeadingTrivia()[2].ToString().Should().Be("/// </summary>");
+        prop1.GetLeadingTrivia()[0].ToString().Should().Be("/// <summary>");
+        prop1.GetLeadingTrivia()[1].ToString().Should().Be("/// the comment");
+        prop1.GetLeadingTrivia()[2].ToString().Should().Be("/// </summary>");
     }
 
     [Fact]
