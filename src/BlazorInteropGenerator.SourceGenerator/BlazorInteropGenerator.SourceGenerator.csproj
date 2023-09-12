@@ -35,13 +35,13 @@
     <PackageReference Include="Jering.Javascript.NodeJS" Version="6.3.1" GeneratePathProperty="true" PrivateAssets="all" />
     <None Include="$(PKGJering_Javascript_NodeJS)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
-    <PackageReference Include="System.Text.Json" Version="8.0.0-preview.7.23375.6" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="System.Text.Json" Version="8.0.0-rc.1.23419.4" GeneratePathProperty="true" PrivateAssets="all" />
     <None Include="$(PKGSystem_Text_Json)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" GeneratePathProperty="true" PrivateAssets="all" />
     <None Include="$(PKGMicrosoft_Extensions_DependencyInjection)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0-preview.7.23375.6" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0-rc.1.23419.4" GeneratePathProperty="true" PrivateAssets="all" />
     <None Include="$(PKGMicrosoft_Bcl_AsyncInterfaces)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" GeneratePathProperty="true" PrivateAssets="all" />
@@ -62,7 +62,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.2.0" GeneratePathProperty="true" PrivateAssets="all" />
     <None Include="$(PKGMicrosoft_AspNetCore_Hosting_Abstractions)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
-    <PackageReference Include="System.Text.Encodings.Web" Version="8.0.0-preview.7.23375.6" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="System.Text.Encodings.Web" Version="8.0.0-rc.1.23419.4" GeneratePathProperty="true" PrivateAssets="all" />
     <None Include="$(PKGSystem_Text_Encodings_Web)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 
