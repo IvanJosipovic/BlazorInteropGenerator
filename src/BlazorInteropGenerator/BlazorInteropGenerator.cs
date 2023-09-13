@@ -18,19 +18,72 @@ namespace BlazorInteropGenerator;
 /// </summary>
 public class Generator
 {
-    private Dictionary<string, SourceFile> Packages = new();
+    Dictionary<string, SourceFile> Packages = new();
 
     CompilationUnitSyntax compilationUnit = SyntaxFactory.CompilationUnit();
 
     NamespaceDeclarationSyntax namespaceDeclaration;
 
-    private Queue<(string, string)> missingObjects = new();
+    Queue<(string, string)> missingObjects = new();
 
     public async Task ParsePackage(string packageName, string packageContent)
     {
         var tsd = await TSDParser.TSDParser.ParseDefinition(packageContent);
 
         Packages.Add(packageName, tsd);
+    }
+
+    public CompilationUnitSyntax GenerateObjects(string typeScriptDefinitionName, string objectName, TSSyntaxKind syntaxKind, string @namespace)
+    {
+        namespaceDeclaration = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(@namespace)).NormalizeWhitespace();
+
+        if (syntaxKind == TSSyntaxKind.InterfaceDeclaration)
+        {
+            var interfaceDeclaration = GetInterface(typeScriptDefinitionName, objectName);
+
+            namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateInterfaceDeclaration(interfaceDeclaration.Value.Item1, interfaceDeclaration.Value.Item2));
+        }
+        else if (syntaxKind == TSSyntaxKind.ClassDeclaration)
+        {
+            var classDeclaration = GetClass(typeScriptDefinitionName, objectName);
+
+            namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateClassDeclaration(classDeclaration.Value.Item1, classDeclaration.Value.Item2));
+        }
+        else
+        {
+            throw new NotSupportedException("Kind not supported " + syntaxKind.ToString());
+        }
+
+        // Generate missing Interfaces
+        while (missingObjects.Count > 0)
+        {
+            var item = missingObjects.Dequeue();
+
+            if (namespaceDeclaration.Members.Any(x => (x.IsKind(SyntaxKind.InterfaceDeclaration) && ((InterfaceDeclarationSyntax)x).Identifier.Text == item.Item2) || (x.IsKind(SyntaxKind.ClassDeclaration) && ((ClassDeclarationSyntax)x).Identifier.Text == item.Item2)))
+            {
+                continue;
+            }
+
+            var @newInterface = GetInterface(item.Item1, item.Item2);
+
+            if (newInterface != null)
+            {
+                namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateInterfaceDeclaration(@newInterface.Value.Item1, @newInterface.Value.Item2));
+            }
+            else
+            {
+                var @newClass = GetClass(item.Item1, item.Item2);
+
+                if (@newClass != null)
+                {
+                    namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateClassDeclaration(@newClass.Value.Item1, @newClass.Value.Item2));
+                }
+            }
+        }
+
+        compilationUnit = compilationUnit.AddMembers(namespaceDeclaration);
+
+        return compilationUnit;
     }
 
     private (string, InterfaceDeclaration)? GetInterface(string typeScriptDefinitionName, string objectName)
@@ -89,59 +142,6 @@ public class Generator
         return externalClass;
     }
 
-    public CompilationUnitSyntax GenerateObjects(string typeScriptDefinitionName, string objectName, TSSyntaxKind syntaxKind, string @namespace)
-    {
-        namespaceDeclaration = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(@namespace)).NormalizeWhitespace();
-
-        if (syntaxKind == TSSyntaxKind.InterfaceDeclaration)
-        {
-            var interfaceDeclaration = GetInterface(typeScriptDefinitionName, objectName);
-
-            namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateInterfaceDeclaration(interfaceDeclaration.Value.Item1, interfaceDeclaration.Value.Item2));
-        }
-        else if (syntaxKind == TSSyntaxKind.ClassDeclaration)
-        {
-            var classDeclaration = GetClass(typeScriptDefinitionName, objectName);
-
-            namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateClassDeclaration(classDeclaration.Value.Item1, classDeclaration.Value.Item2));
-        }
-        else
-        {
-            throw new NotSupportedException("Kind not supported " + syntaxKind.ToString());
-        }
-
-        // Generate missing Interfaces
-        while (missingObjects.Count > 0)
-        {
-            var item = missingObjects.Dequeue();
-
-            if (namespaceDeclaration.Members.Any(x => (x.IsKind(SyntaxKind.InterfaceDeclaration) && ((InterfaceDeclarationSyntax)x).Identifier.Text == item.Item2) || (x.IsKind(SyntaxKind.ClassDeclaration) && ((ClassDeclarationSyntax)x).Identifier.Text == item.Item2)))
-            {
-                continue;
-            }
-
-            var @newInterface = GetInterface(item.Item1, item.Item2);
-
-            if (newInterface != null)
-            {
-                namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateInterfaceDeclaration(@newInterface.Value.Item1, @newInterface.Value.Item2));
-            }
-            else
-            {
-                var @newClass = GetClass(item.Item1, item.Item2);
-
-                if (@newClass != null)
-                {
-                    namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateClassDeclaration(@newClass.Value.Item1, @newClass.Value.Item2));
-                }
-            }
-        }
-
-        compilationUnit = compilationUnit.AddMembers(namespaceDeclaration);
-
-        return compilationUnit;
-    }
-
     private MemberDeclarationSyntax GenerateInterfaceDeclaration(string typeScriptDefinitionName, InterfaceDeclaration interfaceDeclaration)
     {
         var @interface = SyntaxFactory.InterfaceDeclaration(interfaceDeclaration.Name.EscapedText);
@@ -177,8 +177,7 @@ public class Generator
 
                 var type = property.QuestionToken == null ? ConvertType(typeScriptDefinitionName, property.Type) : SyntaxFactory.NullableType(ConvertType(typeScriptDefinitionName, property.Type));
 
-                var propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, property.Name.EscapedText)
-                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+                var propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, CapitalizeFistChar(property.Name.EscapedText))
                     .AddAccessorListAccessors(
                         SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
                         SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
@@ -196,8 +195,7 @@ public class Generator
 
                 var returnType = method.QuestionToken == null ? ConvertType(typeScriptDefinitionName, method.Type) : SyntaxFactory.NullableType(ConvertType(typeScriptDefinitionName, method.Type));
 
-                var methodDeclaration = SyntaxFactory.MethodDeclaration(returnType, method.Name.EscapedText)
-                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
+                var methodDeclaration = SyntaxFactory.MethodDeclaration(returnType, CapitalizeFistChar(method.Name.EscapedText));
 
                 methodDeclaration = methodDeclaration.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
 
@@ -252,7 +250,7 @@ public class Generator
 
                 var type = property.QuestionToken == null ? ConvertType(typeScriptDefinitionName, property.Type) : SyntaxFactory.NullableType(ConvertType(typeScriptDefinitionName, property.Type));
 
-                var propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, property.Name.EscapedText)
+                var propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, CapitalizeFistChar(property.Name.EscapedText))
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                     .AddAccessorListAccessors(
                         SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
@@ -271,7 +269,7 @@ public class Generator
 
                 var returnType = method.QuestionToken == null ? ConvertType(typeScriptDefinitionName, method.Type) : SyntaxFactory.NullableType(ConvertType(typeScriptDefinitionName, method.Type));
 
-                var methodDeclaration = SyntaxFactory.MethodDeclaration(returnType, method.Name.EscapedText)
+                var methodDeclaration = SyntaxFactory.MethodDeclaration(returnType, CapitalizeFistChar(method.Name.EscapedText))
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
 
                 //methodDeclaration = methodDeclaration.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
@@ -441,5 +439,10 @@ public class Generator
         }
 
         return SyntaxFactory.ParseTypeName("object");
+    }
+
+    private string CapitalizeFistChar(string test)
+    {
+        return char.ToUpperInvariant(test[0]) + test.Substring(1);
     }
 }
