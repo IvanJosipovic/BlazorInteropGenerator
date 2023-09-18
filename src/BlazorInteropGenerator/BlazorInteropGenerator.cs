@@ -25,6 +25,90 @@ public class Generator
 
     Queue<(string, string)> missingObjects = new();
 
+    /// <summary>
+    /// List of C# keywords
+    /// </summary>
+    private static readonly List<string> keywords = new List<string>()
+    {
+        "abstract",
+        "as",
+        "base",
+        "bool",
+        "break",
+        "byte",
+        "case",
+        "catch",
+        "char",
+        "checked",
+        "class",
+        "const",
+        "continue",
+        "decimal",
+        "default",
+        "delegate",
+        "do",
+        "double",
+        "else",
+        "enum",
+        "event",
+        "explicit",
+        "extern",
+        "false",
+        "finally",
+        "fixed",
+        "float",
+        "for",
+        "foreach",
+        "goto",
+        "if",
+        "implicit",
+        "in",
+        "int",
+        "interface",
+        "internal",
+        "is",
+        "lock",
+        "long",
+        "namespace",
+        "new",
+        "null",
+        "object",
+        "operator",
+        "out",
+        "override",
+        "params",
+        "private",
+        "protected",
+        "public",
+        "readonly",
+        "ref",
+        "return",
+        "sbyte",
+        "sealed",
+        "short",
+        "sizeof",
+        "stackalloc",
+        "static",
+        "string",
+        "struct",
+        "switch",
+        "this",
+        "throw",
+        "true",
+        "try",
+        "typeof",
+        "uint",
+        "ulong",
+        "unchecked",
+        "unsafe",
+        "ushort",
+        "using",
+        "virtual",
+        "void",
+        "volatile",
+        "while"
+    };
+
     public async Task ParsePackage(string packageName, string packageContent)
     {
         var tsd = await TSDParser.TSDParser.ParseDefinition(packageContent);
@@ -211,7 +295,7 @@ public class Generator
                     {
                         var type = item.QuestionToken == null ? ConvertType(typeScriptDefinitionName, item.Type) : SyntaxFactory.NullableType(ConvertType(typeScriptDefinitionName, item.Type));
 
-                        var param = SyntaxFactory.Parameter(SyntaxFactory.Identifier(item.Name.EscapedText)).WithType(type);
+                        var param = SyntaxFactory.Parameter(SyntaxFactory.Identifier(GetCleanParameterName(item.Name.EscapedText))).WithType(type);
                         parameters.Add(param);
                     }
 
@@ -286,7 +370,7 @@ public class Generator
                     {
                         var type = item.QuestionToken == null ? ConvertType(typeScriptDefinitionName, item.Type) : SyntaxFactory.NullableType(ConvertType(typeScriptDefinitionName, item.Type));
 
-                        var param = SyntaxFactory.Parameter(SyntaxFactory.Identifier(item.Name.EscapedText)).WithType(type);
+                        var param = SyntaxFactory.Parameter(SyntaxFactory.Identifier(GetCleanParameterName(item.Name.EscapedText))).WithType(type);
                         parameters.Add(param);
                     }
 
@@ -443,5 +527,15 @@ public class Generator
     private string CapitalizeFistChar(string test)
     {
         return char.ToUpperInvariant(test[0]) + test.Substring(1);
+    }
+
+    private string GetCleanParameterName(string propName)
+    {
+        if (keywords.Contains(propName))
+        {
+            return "@" + propName;
+        }
+
+        return propName;
     }
 }

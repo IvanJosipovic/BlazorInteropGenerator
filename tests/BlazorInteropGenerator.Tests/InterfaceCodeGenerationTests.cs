@@ -582,6 +582,7 @@ public class InterfaceCodeGenerationTests
 
         method.ParameterList.Parameters.Count.Should().Be(1);
         method.ParameterList.Parameters[0].Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
+        method.ParameterList.Parameters[0].Identifier.Text.Should().Be("prop1");
     }
 
     [Fact]
@@ -609,6 +610,33 @@ public class InterfaceCodeGenerationTests
         method.ParameterList.Parameters.Count.Should().Be(1);
         method.ParameterList.Parameters[0].Type.As<NullableTypeSyntax>().ElementType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
     }
+
+    [Fact]
+    public async Task InterfaceMethodParameterInvalidName()
+    {
+        var tsd = """
+                export interface SomeType {
+                  method(event: string): void;
+                }
+                """;
+
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var method = @interface.Members[0] as MethodDeclarationSyntax;
+
+        method.ParameterList.Parameters.Count.Should().Be(1);
+        method.ParameterList.Parameters[0].Identifier.Text.Should().Be("@event");
+    }
+
 
     #endregion
 }
