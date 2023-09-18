@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.7.0" />
-    <PackageReference Include="TSDParser" Version="1.0.0-alpha.12" />
+    <PackageReference Include="TSDParser" Version="1.0.0-alpha.14" />
   </ItemGroup>
 
   <ItemGroup>
