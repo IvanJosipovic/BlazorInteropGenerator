@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TSDParser.Class;
+using TSDParser.Class.Keywords;
 using TSDParser.Enums;
 using SyntaxKind = Microsoft.CodeAnalysis.CSharp.SyntaxKind;
 using TSSyntaxKind = TSDParser.Enums.SyntaxKind;
@@ -24,6 +25,90 @@ public class Generator
     NamespaceDeclarationSyntax namespaceDeclaration;
 
     Queue<(string, string)> missingObjects = new();
+
+    /// <summary>
+    /// List of C# keywords
+    /// </summary>
+    private static readonly List<string> keywords = new List<string>()
+    {
+        "abstract",
+        "as",
+        "base",
+        "bool",
+        "break",
+        "byte",
+        "case",
+        "catch",
+        "char",
+        "checked",
+        "class",
+        "const",
+        "continue",
+        "decimal",
+        "default",
+        "delegate",
+        "do",
+        "double",
+        "else",
+        "enum",
+        "event",
+        "explicit",
+        "extern",
+        "false",
+        "finally",
+        "fixed",
+        "float",
+        "for",
+        "foreach",
+        "goto",
+        "if",
+        "implicit",
+        "in",
+        "int",
+        "interface",
+        "internal",
+        "is",
+        "lock",
+        "long",
+        "namespace",
+        "new",
+        "null",
+        "object",
+        "operator",
+        "out",
+        "override",
+        "params",
+        "private",
+        "protected",
+        "public",
+        "readonly",
+        "ref",
+        "return",
+        "sbyte",
+        "sealed",
+        "short",
+        "sizeof",
+        "stackalloc",
+        "static",
+        "string",
+        "struct",
+        "switch",
+        "this",
+        "throw",
+        "true",
+        "try",
+        "typeof",
+        "uint",
+        "ulong",
+        "unchecked",
+        "unsafe",
+        "ushort",
+        "using",
+        "virtual",
+        "void",
+        "volatile",
+        "while"
+    };
 
     public async Task ParsePackage(string packageName, string packageContent)
     {
@@ -174,49 +259,40 @@ public class Generator
             {
                 var property = statement as PropertySignature;
 
-                var type = property.QuestionToken == null ? ConvertType(typeScriptDefinitionName, property.Type) : SyntaxFactory.NullableType(ConvertType(typeScriptDefinitionName, property.Type));
-
-                var propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, CapitalizeFistChar(property.Name.EscapedText))
-                    .AddAccessorListAccessors(
-                        SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                        SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
-
-                if (property.JSDoc != null)
+                if (property.Type is FunctionType)
                 {
-                    propertyDeclaration = AddComment(propertyDeclaration, property.JSDoc) as PropertyDeclarationSyntax;
-                }
+                    var functionType = (FunctionType) property.Type;
 
-                @interface = @interface.AddMembers(propertyDeclaration);
+                    var type =  ConvertType(typeScriptDefinitionName, functionType.Type, property.QuestionToken);
+
+                    var methodDeclaration = GenerateMethod(typeScriptDefinitionName, property.Name, functionType.Parameters, type, property.JSDoc);
+
+                    @interface = @interface.AddMembers(methodDeclaration);
+                }
+                else
+                {
+                    var type =  ConvertType(typeScriptDefinitionName, property.Type, property.QuestionToken);
+
+                    var propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, CapitalizeFistChar(property.Name.EscapedText))
+                        .AddAccessorListAccessors(
+                            SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
+                            SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
+
+                    if (property.JSDoc != null)
+                    {
+                        propertyDeclaration = AddComment(propertyDeclaration, property.JSDoc) as PropertyDeclarationSyntax;
+                    }
+
+                    @interface = @interface.AddMembers(propertyDeclaration);
+                }
             }
             else if (statement.Kind == TSSyntaxKind.MethodSignature)
             {
                 var method = statement as MethodSignature;
 
-                var returnType = method.QuestionToken == null ? ConvertType(typeScriptDefinitionName, method.Type) : SyntaxFactory.NullableType(ConvertType(typeScriptDefinitionName, method.Type));
+                var returnType = ConvertType(typeScriptDefinitionName, method.Type, method.QuestionToken);
 
-                var methodDeclaration = SyntaxFactory.MethodDeclaration(returnType, CapitalizeFistChar(method.Name.EscapedText));
-
-                methodDeclaration = methodDeclaration.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
-
-                if (method.JSDoc != null)
-                {
-                    methodDeclaration = AddComment(methodDeclaration, method.JSDoc) as MethodDeclarationSyntax;
-                }
-
-                if (method.Parameters?.Any() == true)
-                {
-                    var parameters = new List<ParameterSyntax>();
-
-                    foreach (var item in method.Parameters)
-                    {
-                        var type = item.QuestionToken == null ? ConvertType(typeScriptDefinitionName, item.Type) : SyntaxFactory.NullableType(ConvertType(typeScriptDefinitionName, item.Type));
-
-                        var param = SyntaxFactory.Parameter(SyntaxFactory.Identifier(item.Name.EscapedText)).WithType(type);
-                        parameters.Add(param);
-                    }
-
-                    methodDeclaration = methodDeclaration.WithParameterList(SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(parameters)));
-                }
+                var methodDeclaration = GenerateMethod(typeScriptDefinitionName, method.Name, method.Parameters, returnType, method.JSDoc);
 
                 @interface = @interface.AddMembers(methodDeclaration);
             }
@@ -227,6 +303,36 @@ public class Generator
         }
 
         return @interface;
+    }
+
+    private MethodDeclarationSyntax GenerateMethod(string typeScriptDefinitionName, Identifier identifier, List<Parameter>? Parameters, TypeSyntax returnType, List<JSDoc>? JSDoc)
+    {
+        var methodDeclaration = SyntaxFactory.MethodDeclaration(returnType, CapitalizeFistChar(identifier.EscapedText));
+
+        methodDeclaration = methodDeclaration.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+
+        if (JSDoc != null)
+        {
+            methodDeclaration = AddComment(methodDeclaration, JSDoc) as MethodDeclarationSyntax;
+        }
+
+        if (Parameters?.Any() == true)
+        {
+            var parameters = new List<ParameterSyntax>();
+
+            foreach (var item in Parameters)
+            {
+                var type = ConvertType(typeScriptDefinitionName, item.Type, item.QuestionToken);
+
+                var param = SyntaxFactory.Parameter(SyntaxFactory.Identifier(GetCleanParameterName(item.Name.EscapedText))).WithType(type);
+                parameters.Add(param);
+            }
+
+            methodDeclaration = methodDeclaration.WithParameterList(SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(parameters)));
+
+        }
+
+        return methodDeclaration;
     }
 
     private MemberDeclarationSyntax GenerateClassDeclaration(string typeScriptDefinitionName, ClassDeclaration classDeclaration)
@@ -247,7 +353,7 @@ public class Generator
             {
                 var property = statement as PropertyDeclaration;
 
-                var type = property.QuestionToken == null ? ConvertType(typeScriptDefinitionName, property.Type) : SyntaxFactory.NullableType(ConvertType(typeScriptDefinitionName, property.Type));
+                var type = ConvertType(typeScriptDefinitionName, property.Type, property.QuestionToken);
 
                 var propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, CapitalizeFistChar(property.Name.EscapedText))
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
@@ -266,32 +372,11 @@ public class Generator
             {
                 var method = statement as MethodDeclaration;
 
-                var returnType = method.QuestionToken == null ? ConvertType(typeScriptDefinitionName, method.Type) : SyntaxFactory.NullableType(ConvertType(typeScriptDefinitionName, method.Type));
+                var returnType = ConvertType(typeScriptDefinitionName, method.Type, method.QuestionToken);
 
-                var methodDeclaration = SyntaxFactory.MethodDeclaration(returnType, CapitalizeFistChar(method.Name.EscapedText))
-                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
+                var methodDeclaration = GenerateMethod(typeScriptDefinitionName, method.Name, method.Parameters, returnType, method.JSDoc);
 
-                //methodDeclaration = methodDeclaration.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
-
-                if (method.JSDoc != null)
-                {
-                    methodDeclaration = AddComment(methodDeclaration, method.JSDoc) as MethodDeclarationSyntax;
-                }
-
-                if (method.Parameters?.Any() == true)
-                {
-                    var parameters = new List<ParameterSyntax>();
-
-                    foreach (var item in method.Parameters)
-                    {
-                        var type = item.QuestionToken == null ? ConvertType(typeScriptDefinitionName, item.Type) : SyntaxFactory.NullableType(ConvertType(typeScriptDefinitionName, item.Type));
-
-                        var param = SyntaxFactory.Parameter(SyntaxFactory.Identifier(item.Name.EscapedText)).WithType(type);
-                        parameters.Add(param);
-                    }
-
-                    methodDeclaration = methodDeclaration.WithParameterList(SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(parameters)));
-                }
+                methodDeclaration = methodDeclaration.AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
 
                 methodDeclaration = methodDeclaration.WithBody(SyntaxFactory.Block(SyntaxFactory.ParseStatement("throw new NotImplementedException();")));
 
@@ -319,32 +404,40 @@ public class Generator
         return node.WithLeadingTrivia(new SyntaxTriviaList(comments));
     }
 
-    private TypeSyntax ConvertType(string typeScriptDefinitionName, Node node)
+    private TypeSyntax ConvertType(string typeScriptDefinitionName, Node node, QuestionToken? questionToken = null)
     {
+        TypeSyntax type = SyntaxFactory.ParseTypeName("object");
+
         switch (node.Kind)
         {
             case TSSyntaxKind.NullKeyword:
-                return SyntaxFactory.ParseTypeName("null");
+                type = SyntaxFactory.ParseTypeName("null");
+                break;
             case TSSyntaxKind.VoidKeyword:
+                // Void can not be nullable
                 return SyntaxFactory.ParseTypeName("void");
             case TSSyntaxKind.AnyKeyword:
-                return SyntaxFactory.ParseTypeName("object");
+                type = SyntaxFactory.ParseTypeName("object");
+                break;
             case TSSyntaxKind.BooleanKeyword:
-                return SyntaxFactory.ParseTypeName("bool");
+                type = SyntaxFactory.ParseTypeName("bool");
+                break;
             case TSSyntaxKind.NumberKeyword:
-                return SyntaxFactory.ParseTypeName("double");
+                type = SyntaxFactory.ParseTypeName("double");
+                break;
             case TSSyntaxKind.StringKeyword:
-                return SyntaxFactory.ParseTypeName("string");
+                type = SyntaxFactory.ParseTypeName("string");
+                break;
             case TSSyntaxKind.TypeReference:
                 // Handle Types
                 var typeReference = (TypeReference)node;
                 if (typeReference.TypeName.EscapedText == "Array")
                 {
-                    return SyntaxFactory.ParseTypeName(ConvertType(typeScriptDefinitionName, typeReference.TypeArguments[0]) + "[]");
+                    type = SyntaxFactory.ParseTypeName(ConvertType(typeScriptDefinitionName, typeReference.TypeArguments[0]) + "[]");
                 }
                 else if (typeReference.TypeName.EscapedText == "Date")
                 {
-                    return SyntaxFactory.ParseTypeName("DateTime");
+                    type = SyntaxFactory.ParseTypeName("DateTime");
                 }
                 else
                 {
@@ -354,9 +447,48 @@ public class Generator
                         missingObjects.Enqueue((typeScriptDefinitionName, typeReference.TypeName.EscapedText));
                     }
 
-                    return SyntaxFactory.ParseTypeName(typeReference.TypeName.EscapedText);
+                    type = SyntaxFactory.ParseTypeName(typeReference.TypeName.EscapedText);
                 }
+                break;
             case TSSyntaxKind.FunctionType:
+                var functionType = (FunctionType)node;
+
+                if (functionType.Type is VoidKeyword)
+                {
+                    // Action
+
+                    if (functionType.Parameters.Count == 0)
+                    {
+                        type = SyntaxFactory.ParseTypeName("System.Action");
+                    }
+                    else
+                    {
+                        var types = new List<TypeSyntax>();
+
+                        if (functionType.Parameters.Count > 0)
+                        {
+                            types.AddRange(functionType.Parameters.Select(x => ConvertType(typeScriptDefinitionName, x.Type)));
+                        }
+
+                        type = SyntaxFactory.GenericName(SyntaxFactory.Identifier("System.Action"), SyntaxFactory.TypeArgumentList(SyntaxFactory.SeparatedList(types)));
+                    }
+
+                }
+                else
+                {
+                    // Func
+                    var types = new List<TypeSyntax>();
+
+                    if (functionType.Parameters.Count > 0)
+                    {
+                        types.AddRange(functionType.Parameters.Select(x => ConvertType(typeScriptDefinitionName, x.Type)));
+                    }
+
+                    types.Add(ConvertType(typeScriptDefinitionName, functionType.Type));
+
+                    type = SyntaxFactory.GenericName(SyntaxFactory.Identifier("System.Func"), SyntaxFactory.TypeArgumentList(SyntaxFactory.SeparatedList(types)));
+                }
+
                 break;
             case TSSyntaxKind.ConstructorType:
                 break;
@@ -368,16 +500,16 @@ public class Generator
                     var indexSignature = typeLiteral.Members[0] as IndexSignature;
 
                     // Dictionary
-                    return SyntaxFactory.GenericName(SyntaxFactory.Identifier("System.Collections.Generic.Dictionary"), SyntaxFactory.TypeArgumentList(SyntaxFactory.SeparatedList(new List<TypeSyntax>()
+                    type = SyntaxFactory.GenericName(SyntaxFactory.Identifier("System.Collections.Generic.Dictionary"), SyntaxFactory.TypeArgumentList(SyntaxFactory.SeparatedList(new List<TypeSyntax>()
                     {
                         ConvertType(typeScriptDefinitionName, indexSignature.Parameters[0].Type),
                         ConvertType(typeScriptDefinitionName, indexSignature.Type)
                     })));
                 }
-
                 break;
             case TSSyntaxKind.ArrayType:
-                return SyntaxFactory.ParseTypeName(ConvertType(typeScriptDefinitionName, ((ArrayType)node).ElementType) + "[]");
+                type = SyntaxFactory.ParseTypeName(ConvertType(typeScriptDefinitionName, ((ArrayType)node).ElementType) + "[]");
+                break;
             case TSSyntaxKind.TupleType:
                 break;
             case TSSyntaxKind.UnionType:
@@ -397,7 +529,7 @@ public class Generator
                     missingObjects.Enqueue((typeScriptDefinitionName, expressionWithTypeArguments.Expression.EscapedText));
                 }
 
-                return SyntaxFactory.ParseTypeName(expressionWithTypeArguments.Expression.EscapedText);
+                type = SyntaxFactory.ParseTypeName(expressionWithTypeArguments.Expression.EscapedText);
                 break;
             case TSSyntaxKind.FirstStatement:
                 break;
@@ -433,15 +565,23 @@ public class Generator
                 break;
             case TSSyntaxKind.EnumMember:
                 break;
-            default:
-                break;
         }
 
-        return SyntaxFactory.ParseTypeName("object");
+        return questionToken == null ? type : SyntaxFactory.NullableType(type);
     }
 
     private string CapitalizeFistChar(string test)
     {
         return char.ToUpperInvariant(test[0]) + test.Substring(1);
+    }
+
+    private string GetCleanParameterName(string propName)
+    {
+        if (keywords.Contains(propName))
+        {
+            return "@" + propName;
+        }
+
+        return propName;
     }
 }
