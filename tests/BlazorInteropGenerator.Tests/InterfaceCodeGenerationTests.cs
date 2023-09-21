@@ -269,6 +269,31 @@ public class InterfaceCodeGenerationTests
     }
 
     [Fact]
+    public async Task InterfacePropertyNullableVoid()
+    {
+        var tsd = """
+                export interface SomeType {
+                  prop1?: void;
+                }
+                """;
+
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var prop1 = @interface.Members[0] as PropertyDeclarationSyntax;
+
+        prop1.Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("void");
+    }
+
+    [Fact]
     public async Task InterfacePropertyString()
     {
         var tsd = """
@@ -425,6 +450,178 @@ public class InterfaceCodeGenerationTests
         prop1.Type.As<GenericNameSyntax>().TypeArgumentList.Arguments[1].As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("object");
     }
 
+    [Fact]
+    public async Task InterfacePropertyFunction()
+    {
+        var tsd = """
+                export interface SomeType {
+                  prop1: () => void;
+                }
+                """;
+
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var method = @interface.Members[0] as MethodDeclarationSyntax;
+
+        method.ReturnType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("void");
+        method.Identifier.Text.Should().Be("Prop1");
+    }
+
+    [Fact]
+    public async Task InterfacePropertyFunctionParamString()
+    {
+        var tsd = """
+                export interface SomeType {
+                  prop1: (prop2: string) => void;
+                }
+                """;
+
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var method = @interface.Members[0] as MethodDeclarationSyntax;
+
+        method.ReturnType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("void");
+        method.ParameterList.Parameters.Count.Should().Be(1);
+        method.ParameterList.Parameters[0].Type.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
+    }
+
+    [Fact]
+    public async Task InterfacePropertyCallback()
+    {
+        var tsd = """
+                export interface SomeType {
+                  prop1: (callBack: () => void) => void;
+                }
+                """;
+
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var method = @interface.Members[0] as MethodDeclarationSyntax;
+
+        method.ReturnType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("void");
+        method.ParameterList.Parameters.Count.Should().Be(1);
+        method.ParameterList.Parameters[0].As<ParameterSyntax>().Identifier.Text.Should().Be("callBack");
+        method.ParameterList.Parameters[0].As<ParameterSyntax>().Type.As<QualifiedNameSyntax>().ToString().Should().Be("System.Action");
+    }
+
+    [Fact]
+    public async Task InterfacePropertyCallbackParam()
+    {
+        var tsd = """
+                export interface SomeType {
+                  prop1: (callBack: (param: string) => void) => void;
+                }
+                """;
+
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var method = @interface.Members[0] as MethodDeclarationSyntax;
+
+        method.ReturnType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("void");
+        method.ParameterList.Parameters.Count.Should().Be(1);
+        method.ParameterList.Parameters[0].As<ParameterSyntax>().Identifier.Text.Should().Be("callBack");
+        method.ParameterList.Parameters[0].As<ParameterSyntax>().Type.As<GenericNameSyntax>().Identifier.ValueText.Should().Be("System.Action");
+        method.ParameterList.Parameters[0].As<ParameterSyntax>().Type.As<GenericNameSyntax>().TypeArgumentList.Arguments.Count.Should().Be(1);
+        method.ParameterList.Parameters[0].As<ParameterSyntax>().Type.As<GenericNameSyntax>().TypeArgumentList.Arguments[0].As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
+    }
+
+    [Fact]
+    public async Task InterfacePropertyCallbackReturn()
+    {
+        var tsd = """
+                export interface SomeType {
+                  prop1: (callBack: () => boolean) => void;
+                }
+                """;
+
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var method = @interface.Members[0] as MethodDeclarationSyntax;
+
+        method.ReturnType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("void");
+        method.ParameterList.Parameters.Count.Should().Be(1);
+        method.ParameterList.Parameters[0].As<ParameterSyntax>().Identifier.Text.Should().Be("callBack");
+        method.ParameterList.Parameters[0].As<ParameterSyntax>().Type.As<GenericNameSyntax>().Identifier.ValueText.Should().Be("System.Func");
+        method.ParameterList.Parameters[0].As<ParameterSyntax>().Type.As<GenericNameSyntax>().TypeArgumentList.Arguments.Count.Should().Be(1);
+        method.ParameterList.Parameters[0].As<ParameterSyntax>().Type.As<GenericNameSyntax>().TypeArgumentList.Arguments[0].As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("bool");
+    }
+
+    [Fact]
+    public async Task InterfacePropertyCallbackParamReturn()
+    {
+        var tsd = """
+                export interface SomeType {
+                  prop1: (callBack: (param: string) => boolean) => void;
+                }
+                """;
+
+        var generator = new Generator();
+        await generator.ParsePackage("tsd", tsd);
+        var syntaxFactory = generator.GenerateObjects("tsd", "SomeType", TSDParser.Enums.SyntaxKind.InterfaceDeclaration, "Test");
+
+        var code = syntaxFactory
+           .NormalizeWhitespace()
+           .ToFullString();
+
+        syntaxFactory.Members.Count.Should().Be(1);
+        var @interface = (syntaxFactory.Members[0] as NamespaceDeclarationSyntax).Members[0] as InterfaceDeclarationSyntax;
+
+        var method = @interface.Members[0] as MethodDeclarationSyntax;
+
+        method.ReturnType.As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("void");
+        method.ParameterList.Parameters.Count.Should().Be(1);
+        method.ParameterList.Parameters[0].As<ParameterSyntax>().Identifier.Text.Should().Be("callBack");
+        method.ParameterList.Parameters[0].As<ParameterSyntax>().Type.As<GenericNameSyntax>().Identifier.ValueText.Should().Be("System.Func");
+        method.ParameterList.Parameters[0].As<ParameterSyntax>().Type.As<GenericNameSyntax>().TypeArgumentList.Arguments.Count.Should().Be(2);
+        method.ParameterList.Parameters[0].As<ParameterSyntax>().Type.As<GenericNameSyntax>().TypeArgumentList.Arguments[0].As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("string");
+        method.ParameterList.Parameters[0].As<ParameterSyntax>().Type.As<GenericNameSyntax>().TypeArgumentList.Arguments[1].As<PredefinedTypeSyntax>().Keyword.Text.Should().Be("bool");
+    }
+
     #endregion
 
     #region Method
@@ -456,7 +653,6 @@ public class InterfaceCodeGenerationTests
         method.GetLeadingTrivia()[1].ToString().Should().Be("/// the comment");
         method.GetLeadingTrivia()[2].ToString().Should().Be("/// </summary>");
     }
-
 
     [Fact]
     public async Task InterfaceMethod()
