@@ -31,7 +31,7 @@
 
   <!--Source Generator Dependencies-->
   <ItemGroup>
-    <PackageReference Include="TSDParser" Version="1.0.0-alpha.15" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="TSDParser" Version="1.0.0-alpha.16" GeneratePathProperty="true" PrivateAssets="all" />
     <None Include="$(PKGTSDParser)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
     <PackageReference Include="Jering.Javascript.NodeJS" Version="7.0.0" GeneratePathProperty="true" PrivateAssets="all" />
